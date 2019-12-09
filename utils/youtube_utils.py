@@ -55,6 +55,7 @@ def download_video(video_id, target_f):
     end = time.time()
     print("Downloading took %.2f seconds. Success: %d" % ((end - start), proc.returncode))
     if proc.returncode != 0:
+        print("Could not download video %s. Error: %s" % (video_id, proc.errors))
         return False
     return True
 
