@@ -44,6 +44,7 @@ downloaded_folder = "/Users/rjain/Aadhyatm Drive/Jainism/Pravachan/Rishabh Ji/Pr
 
 API_KEY = "AIzaSyAaut-x1l6wcFwK-1-MxKK8idIoZhDXPxM"
 
+
 def get_details(fname):
     """Return value is a list:
     [serial_number, date, gaatha number, kalash number, other]
@@ -93,14 +94,14 @@ def get_details(fname):
             gatha_string = gatha_string[1:]
         else:
             break
-    
+
     # remove trailing "-"
     while True:
         if gatha_string.endswith("-"):
             gatha_string = gatha_string[:-1]
         else:
             break
-    
+
     # do same for k
     while True:
         if kalash_string.startswith('K'):
@@ -109,13 +110,13 @@ def get_details(fname):
             kalash_string = kalash_string[1:]
         else:
             break
-    
+
     while True:
         if kalash_string.endswith('-'):
             kalash_string = kalash_string[:-1]
         else:
             break
-    
+
     if len(gatha_string) > 0:
         g = gatha_string.split('-')
         gathas = []
@@ -151,6 +152,7 @@ def get_details(fname):
 
     return result
 
+
 def add_metadata(target_f):
     track_num = int(os.path.basename(target_f).split("_")[0])
     # set file metadata
@@ -159,7 +161,7 @@ def add_metadata(target_f):
 
     if audio.tag is None:
         audio.initTag()
-    
+
     audio.tag.images.set(3, open(album_art_file, 'rb').read(), 'image/jpg')
     audio.tag.artist = artist
     audio.tag.album_artist = album_artist
@@ -168,6 +170,7 @@ def add_metadata(target_f):
     audio.tag.track_num = (track_num, 0)
     audio.tag.genre = genre
     audio.tag.save()
+
 
 def new_fname(fname):
     meta = get_details(fname)
@@ -180,7 +183,7 @@ def new_fname(fname):
     # gatha
     if len(meta[2]) > 0:
         final_fname = "%s_G-%s" % (final_fname, "-".join(meta[2]))
-    
+
     # kalash
     if len(meta[3]) > 0:
         final_fname = "%s_K-%s" % (final_fname, "-".join(meta[3]))
@@ -189,6 +192,7 @@ def new_fname(fname):
     if len(meta[4]) > 0:
         final_fname = "%s_%s" % (final_fname, "_".join(meta[4]))
     return final_fname
+
 
 """
 def get_files():
@@ -228,24 +232,28 @@ def get_files():
     return files
 """
 
+
 def get_downloaded_files():
     files = []
     for r, d, f in os.walk(downloaded_folder):
         for file in f:
             if '.mp3' in file:
-                files.append(file[:-4])
-    
+                # only append the index
+                files.append(file.split("_")[0])
     files.sort()
     return files
     # print(files)
 
+
 def get_files():
-    all_files = yt.get_playlist_items(playlist_id=playlist, api_key=API_KEY, reverse=True)
+    all_files = yt.get_playlist_items(
+        playlist_id=playlist, api_key=API_KEY, reverse=True)
     downloaded_files = get_downloaded_files()
     new_files = list()
     for file in all_files:
         new_f = new_fname(file['title'])
-        if new_f not in downloaded_files:
+        new_f_index = new_f.split("_")[0]
+        if new_f_index not in downloaded_files:
             f1 = file
             f1['new_f'] = new_f
             new_files.append(f1)
@@ -253,13 +261,14 @@ def get_files():
     print("Already downloaded files...")
     for f in downloaded_files:
         print(f)
-    
+
     print()
     print("New files to download")
     for f in new_files:
         print(f)
 
     return new_files
+
 
 def download_files(files_dict):
     failed_files = set()
@@ -273,15 +282,17 @@ def download_files(files_dict):
         # download video
         if not yt.download_video(item['video_id'], video):
             failed_files.add([item['title'], item['video_id']])
-        
+
         # convert to audio
         audio_utils.video_to_audio(video, audio, replace=True)
-        audio_utils.add_metadata(audio, album, artist, album_artist, album_art_file)
+        audio_utils.add_metadata(audio, album, artist,
+                                 album_artist, album_art_file)
 
     if len(failed_files) > 0:
         print("Failed to download files: %s" % str(failed_files))
     if len(failed_audio_files) > 0:
         print("Failed to convert files: %s" % str(failed_audio_files))
+
 
 def isint(s):
     try:
@@ -289,6 +300,7 @@ def isint(s):
     except:
         return False
     return True
+
 
 files = get_files()
 download_files(files)
