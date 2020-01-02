@@ -260,8 +260,7 @@ def get_files():
             new_files.append(f1)
 
     print("Already downloaded files...")
-    for f in downloaded_files:
-        print(f)
+    print(download_files)
 
     print()
     print("New files to download")

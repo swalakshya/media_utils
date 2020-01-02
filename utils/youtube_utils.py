@@ -8,6 +8,7 @@ import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 
+
 def get_files(playlist_id, playlist_start=None, playlist_end=None, playlist_reverse=False):
     print("Getting all the files to be downloaded...")
     base_cmd = ["youtube-dl"]
@@ -27,11 +28,13 @@ def get_files(playlist_id, playlist_start=None, playlist_end=None, playlist_reve
 
     print(cmd_dry)
     start = time.time()
-    result = subprocess.Popen(cmd_dry, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    result = subprocess.Popen(
+        cmd_dry, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = result.communicate()
     end = time.time()
     if result.returncode != 0:
-        print("Command to get YouTube IDs failed. Errors:\tstdout: %s\nstderr:%s\n" % (out, err))
+        print("Command to get YouTube IDs failed. Errors:\tstdout: %s\nstderr:%s\n" % (
+            out, err))
         return None
     print("Fetching files took %.2f seconds" % (end - start))
     out = out.decode("utf-8")
@@ -44,20 +47,37 @@ def get_files(playlist_id, playlist_start=None, playlist_end=None, playlist_reve
         files.append([id, fname])
     return files
 
+
 def download_video(video_id, target_f):
     print("Downloading %s..." % target_f)
 
     # download video
     cmd = ["youtube-dl", "-i", "-f", "mp4", "-o", target_f, video_id]
     start = time.time()
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
     proc.communicate()
     end = time.time()
-    print("Downloading took %.2f seconds. Success: %d" % ((end - start), proc.returncode))
+    print("Downloading took %.2f seconds. Success: %d" %
+          ((end - start), proc.returncode))
     if proc.returncode != 0:
-        print("Could not download video %s. Error: %s" % (video_id, proc.errors))
+        print("Could not download video %s. Error: %s. Retrying..." %
+              (video_id, proc.errors))
+        url = "https://www.youtube.com/watch?v=%s" % video_id
+        cmd = ["youtube-dl", "-i", "-f", "mp4", "-o", target_f, url]
+        start = time.time()
+        proc = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc.communicate()
+        end = time.time()
+        if proc.returncode != 0:
+            print("Retry failed for video %s. Error: %s." %
+                  (video_id, proc.errors))
+        else:
+            return True
         return False
     return True
+
 
 def get_playlist_items(playlist_id, api_key, reverse=False):
     # Disable OAuthlib's HTTPS verification when running locally.
@@ -80,9 +100,9 @@ def get_playlist_items(playlist_id, api_key, reverse=False):
     while(True):
         if next_token is None:
             request = youtube.playlistItems().list(
-            part="snippet",
-            maxResults=50,
-            playlistId=playlist_id
+                part="snippet",
+                maxResults=50,
+                playlistId=playlist_id
             )
         else:
             request = youtube.playlistItems().list(
@@ -97,7 +117,8 @@ def get_playlist_items(playlist_id, api_key, reverse=False):
             title = item['snippet']['title']
             video_id = item['snippet']['resourceId']['videoId']
             position = item['snippet']['position']
-            list_item = {"title": title, "video_id": video_id, "position": position}
+            list_item = {"title": title,
+                         "video_id": video_id, "position": position}
             if reverse:
                 items.insert(0, list_item)
             else:
