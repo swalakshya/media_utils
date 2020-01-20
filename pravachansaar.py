@@ -15,6 +15,7 @@ pip requirements:
     - eyed3
     - google-api-python-client
     - google-auth-oauthlib
+    - youtube_dl
 
 other utils:
     - mplayer
@@ -31,8 +32,8 @@ playlist_end = 7
 playlist_reverse = True
 
 # Video/Audio download options
-src_video = "/Users/rjain/aadhyatm/D/P/Rishabh Ji/video"
-src_audio = "/Users/rjain/aadhyatm/D/P/Rishabh Ji/mp3"
+src_video = "/Users/rjain/aadhyatm/P/video"
+src_audio = "/Users/rjain/aadhyatm/P/mp3"
 
 # Audio file metadata options
 album_art_file = "/Users/rjain/Aadhyatm Drive/Jainism/images/Acharya_kundkund.jpg"
@@ -260,7 +261,7 @@ def get_files():
             new_files.append(f1)
 
     print("Already downloaded files...")
-    print(download_files)
+    print(downloaded_files)
 
     print()
     print("New files to download")
