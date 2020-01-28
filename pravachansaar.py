@@ -196,45 +196,6 @@ def new_fname(fname):
     return final_fname
 
 
-"""
-def get_files():
-    print("Getting all the files to be downloaded...")
-    base_cmd = ["youtube-dl"]
-    if playlist_start:
-        base_cmd.append("--playlist-start")
-        base_cmd.append(str(playlist_start))
-    if playlist_end:
-        base_cmd.append("--playlist-end")
-        base_cmd.append(str(playlist_end))
-
-    if playlist_reverse:
-        base_cmd.append("--playlist-reverse")
-
-    cmd_dry = ["--get-id", "--get-title"]
-
-    cmd_dry = base_cmd + cmd_dry + [playlist]
-
-    print(cmd_dry)
-    start = time.time()
-    result = subprocess.Popen(cmd_dry, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = result.communicate()
-    end = time.time()
-    if result.returncode != 0:
-        print("Command to get YouTube IDs failed. Errors:\tstdout: %s\nstderr:%s\n" % (out, err))
-        sys.exit(1)
-    print("Fetching files took %.2f seconds" % (end - start))
-    out = out.decode("utf-8")
-
-    files = list()
-    lines = out.split('\n')
-    for i in range(0, int(len(lines)/2)):
-        fname = lines[2 * i]
-        id = lines[(2 * i) + 1]
-        files.append([id, fname])
-    return files
-"""
-
-
 def get_downloaded_files():
     files = []
     for r, d, f in os.walk(downloaded_folder):
