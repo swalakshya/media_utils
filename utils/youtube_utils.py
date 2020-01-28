@@ -8,6 +8,8 @@ import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 
+from youtube_dl import YoutubeDL
+
 
 def get_files(playlist_id, playlist_start=None, playlist_end=None, playlist_reverse=False):
     print("Getting all the files to be downloaded...")
@@ -47,37 +49,24 @@ def get_files(playlist_id, playlist_start=None, playlist_end=None, playlist_reve
         files.append([id, fname])
     return files
 
-
 def download_video(video_id, target_f):
-    print("Downloading %s..." % target_f)
+    params = {
+        'nocheckcertificate': True,
+        'format': 'mp4',
+        'ignoreerrors': True,
+        'outtmpl': target_f,
+    }
 
-    # download video
-    cmd = ["youtube-dl", "-i", "-f", "mp4", "-o", target_f, video_id]
-    start = time.time()
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
-    proc.communicate()
-    end = time.time()
-    print("Downloading took %.2f seconds. Success: %d" %
-          ((end - start), proc.returncode))
-    if proc.returncode != 0:
-        print("Could not download video %s. Error: %s. Retrying..." %
-              (video_id, proc.errors))
-        url = "https://www.youtube.com/watch?v=%s" % video_id
-        cmd = ["youtube-dl", "-i", "-f", "mp4", "-o", target_f, url]
-        start = time.time()
-        proc = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        proc.communicate()
-        end = time.time()
-        if proc.returncode != 0:
-            print("Retry failed for video %s. Error: %s." %
-                  (video_id, proc.errors))
-        else:
-            return True
+    yt = YoutubeDL(params=params)
+    rc = 0
+    try:
+        rc = yt.download([video_id])
+    except Exception as e:
+        print("Couldn't download file with id %s. Exception: %s" % (video_id, str(e)))
+
+    if rc != 0:
         return False
     return True
-
 
 def get_playlist_items(playlist_id, api_key, reverse=False):
     # Disable OAuthlib's HTTPS verification when running locally.
