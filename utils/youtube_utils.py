@@ -4,50 +4,10 @@ import subprocess
 import time
 import os
 
-import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
 
 from youtube_dl import YoutubeDL
-
-
-def get_files(playlist_id, playlist_start=None, playlist_end=None, playlist_reverse=False):
-    print("Getting all the files to be downloaded...")
-    base_cmd = ["youtube-dl"]
-    if playlist_start:
-        base_cmd.append("--playlist-start")
-        base_cmd.append(str(playlist_start))
-    if playlist_end:
-        base_cmd.append("--playlist-end")
-        base_cmd.append(str(playlist_end))
-
-    if playlist_reverse:
-        base_cmd.append("--playlist-reverse")
-
-    cmd_dry = ["--get-id", "--get-title"]
-
-    cmd_dry = base_cmd + cmd_dry + [playlist_id]
-
-    print(cmd_dry)
-    start = time.time()
-    result = subprocess.Popen(
-        cmd_dry, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = result.communicate()
-    end = time.time()
-    if result.returncode != 0:
-        print("Command to get YouTube IDs failed. Errors:\tstdout: %s\nstderr:%s\n" % (
-            out, err))
-        return None
-    print("Fetching files took %.2f seconds" % (end - start))
-    out = out.decode("utf-8")
-
-    files = list()
-    lines = out.split('\n')
-    for i in range(0, int(len(lines)/2)):
-        fname = lines[2 * i]
-        id = lines[(2 * i) + 1]
-        files.append([id, fname])
-    return files
 
 def download_video(video_id, target_f):
     params = {
