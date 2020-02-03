@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 import os
 import re
-import subprocess
-import sys
-import threading
-import time
 
-import eyed3
 import utils.youtube_utils as yt
 import utils.audio as audio_utils
 
@@ -154,26 +149,6 @@ def get_details(fname):
 
     return result
 
-
-def add_metadata(target_f):
-    track_num = int(os.path.basename(target_f).split("_")[0])
-    # set file metadata
-
-    audio = eyed3.load(target_f)
-
-    if audio.tag is None:
-        audio.initTag()
-
-    audio.tag.images.set(3, open(album_art_file, 'rb').read(), 'image/jpg')
-    audio.tag.artist = artist
-    audio.tag.album_artist = album_artist
-    audio.tag.album = album
-    audio.tag.composer = album_artist
-    audio.tag.track_num = (track_num, 0)
-    audio.tag.genre = genre
-    audio.tag.save()
-
-
 def new_fname(fname):
     meta = get_details(fname)
     if meta is None:
@@ -245,10 +220,12 @@ def download_files(files_dict):
         if not yt.download_video(item['video_id'], video):
             failed_files.add([item['title'], item['video_id']])
 
+        track_num = int(os.path.basename(audio).split("_")[0])
+
         # convert to audio
         audio_utils.video_to_audio(video, audio, replace=True)
         audio_utils.add_metadata(audio, album, artist,
-                                 album_artist, album_art_file)
+                                 album_artist, album_art_file, track_num=track_num)
 
     if len(failed_files) > 0:
         print("Failed to download files: %s" % str(failed_files))
