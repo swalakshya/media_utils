@@ -1,32 +1,54 @@
 import os
 import subprocess
 import time
+import sys
 
-import eyed3
+if sys.version_info[0] >= 3:
+    from urllib.request import urlopen
+elif sys.version_info[0] < 3:
+    from urllib import quote_plus, quote
+    from urllib import urlopen
 
-# Adds metadata to the mp3 file
-def add_metadata(target_f, album, artist, album_artist, album_art_file, genre="Pravachan"):
-    print("Adding metadata for file %s" % os.path.basename(target_f))
-    track_num_str = os.path.basename(target_f).split("_")[0]
+from mutagen.mp3 import EasyMP3
+from mutagen.id3 import APIC, ID3
+
+def add_metadata(target_f, album, artist, album_artist, album_art_file,
+                  track_num=None, title=None, genre="Pravachan"):
+    # Taken from https://www.programcreek.com/python/example/63462/mutagen.mp3.EasyMP3
+    # https://github.com/cooperhammond/irs/blob/master/irs/interact/tagger.py
+
+    tags = EasyMP3(target_f)
+    # tags["title"] = title
+    tags["artist"] = artist
+    tags["album"] = album
+    tags["albumartist"] = album_artist
+    if track_num is not None:
+        tags["tracknumber"] = str(track_num)
+    if title is not None:
+        tags["title"] = title
+    tags.save()
+
+    mp3 = EasyMP3(target_f, ID3=ID3)
     try:
-        track_num = int(track_num_str)
+        mp3.add_tags()
     except:
-        track_num = int(track_num_str.split("-")[0])
-    # set file metadata
+        pass
 
-    audio = eyed3.load(target_f)
+    mp3.tags.add(
+        APIC(
+            encoding = 3,
+            mime = "image/jpg",
+            type = 3,
+            desc = "cover",
+            data = urlopen("file://%s" % album_art_file).read()
+        )
+    )
+    mp3.save()
 
-    if audio.tag is None:
-        audio.initTag()
-    
-    audio.tag.images.set(3, open(album_art_file, 'rb').read(), 'image/jpg')
-    audio.tag.artist = artist
-    audio.tag.album_artist = album_artist
-    audio.tag.album = album
-    audio.tag.composer = album_artist
-    audio.tag.track_num = (track_num, 0)
-    audio.tag.genre = genre
-    audio.tag.save()
+def remove_metadata(target_f):
+    mp3 = EasyMP3(target_f)
+    mp3.delete()
+    mp3.save()
 
 def video_to_audio(video_file, audio_file, replace=False):
     if os.path.isfile(audio_file):
