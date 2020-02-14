@@ -190,6 +190,8 @@ def get_files():
     new_files = list()
     for file in all_files:
         new_f = new_fname(file['title'])
+        if new_f is None:
+            continue
         new_f_index = new_f.split("_")[0]
         if new_f_index not in downloaded_files:
             f1 = file
