@@ -202,9 +202,12 @@ def get_files():
     print(downloaded_files)
 
     print()
-    print("New files to download")
-    for f in new_files:
-        print(f)
+    if len(new_files) == 0:
+        print("No new files to download")
+    else:
+        print("New files to download")
+        for f in new_files:
+            print(f)
 
     return new_files
 
