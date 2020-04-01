@@ -63,7 +63,7 @@ def get_details(fname):
         result.append(date)
     else:
         print("Could not find date in file %s" % fname)
-        return None
+        result.append("")
 
     # get serial number
     re_m = re.match('.*-(\d+)', fname)
