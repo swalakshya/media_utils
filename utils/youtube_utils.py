@@ -9,6 +9,7 @@ import googleapiclient.errors
 
 from youtube_dl import YoutubeDL
 
+
 def download_video(video_id, target_f):
     params = {
         'nocheckcertificate': True,
@@ -28,6 +29,7 @@ def download_video(video_id, target_f):
         return False
     return True
 
+
 def get_playlist_items(playlist_id, api_key, reverse=False):
     # Disable OAuthlib's HTTPS verification when running locally.
     # *DO NOT* leave this option enabled in production.
@@ -46,7 +48,7 @@ def get_playlist_items(playlist_id, api_key, reverse=False):
 
     next_token = None
 
-    while(True):
+    while True:
         if next_token is None:
             request = youtube.playlistItems().list(
                 part="snippet",

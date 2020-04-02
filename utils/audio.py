@@ -12,6 +12,7 @@ elif sys.version_info[0] < 3:
 from mutagen.mp3 import EasyMP3
 from mutagen.id3 import APIC, ID3
 
+
 def add_metadata(target_f, album, artist, album_artist, album_art_file,
                   track_num=None, title=None, genre="Pravachan"):
     # Taken from https://www.programcreek.com/python/example/63462/mutagen.mp3.EasyMP3
@@ -45,10 +46,12 @@ def add_metadata(target_f, album, artist, album_artist, album_art_file,
     )
     mp3.save()
 
+
 def remove_metadata(target_f):
     mp3 = EasyMP3(target_f)
     mp3.delete()
     mp3.save()
+
 
 def video_to_audio(video_file, audio_file, replace=False):
     if os.path.isfile(audio_file):
