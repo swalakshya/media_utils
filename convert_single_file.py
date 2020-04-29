@@ -1,36 +1,39 @@
 #!/usr/bin/env python
+import json
 import os
-import re
 import sys
 
 import utils.youtube_utils as yt
 import utils.audio as audio_utils
 
-# Video/Audio download options
-src_video = "/Users/rjain/aadhyatm/P/video"
-src_audio = "/Users/rjain/aadhyatm/P/mp3"
+"""
+This file reads a config file in the following format.
+{
+    "video_path": <path where video file is downloaded>,
+    "audio_path": <path where audio file is downloaded>,
+    "album_art_file": <...>,
+    "album": <...>,
+    "artist": <...>,
+    "album_artist": <....>,
+    "genre": <....>,
+    "youtube_id": <...>,
+    "output_file": <...>,
+}
+"""
+if len(sys.argv) < 2:
+    sys.exit("ERROR: Provide a config file\n")
+config_file_path = sys.argv[1]
 
-# Audio file metadata options
-album_art_file = "/Users/rjain/Aadhyatm Drive/Jainism/images/Acharya_kundkund.jpg"
-album = "Niyamsaar"
-artist = "Pandit Rishabh Jain"
-album_artist = "Acharya Kund Kund"
-genre = "Pravachan"
+f = open(config_file_path, 'r')
+config = json.load(f)
 
-downloaded_folder = "/Users/rjain/Aadhyatm Drive/Jainism/Pravachan/Rishabh Ji/Niyamsaar"
+print(json.dumps(config, indent=2))
+print()
 
-API_KEY = "AIzaSyAaut-x1l6wcFwK-1-MxKK8idIoZhDXPxM"
+video = os.path.join("%s/%s.mp4" % (config['video_path'], config['output_file']))
+audio = os.path.join("%s/%s.mp3" % (config['audio_path'], config['output_file']))
 
-# yt_id = "mwFDhSDt9uE"
-# output = "003_Upodghaat"
-
-yt_id = sys.argv[1]
-output = sys.argv[2]
-
-video = os.path.join("%s/%s.mp4" % (src_video, output))
-audio = os.path.join("%s/%s.mp3" % (downloaded_folder, output))
-
-if not yt.download_video(yt_id, video):
+if not yt.download_video(config['youtube_id'], video):
     print("Unable to download video")
     sys.exit(1)
 
@@ -41,6 +44,6 @@ except Exception as e:
 
 # convert to audio
 audio_utils.video_to_audio(video, audio, replace=True)
-audio_utils.add_metadata(audio, album, artist,
-                         album_artist, album_art_file, track_num=track_num)
+audio_utils.add_metadata(audio, config['album'], config['artist'],
+                         config['album_artist'], config['album_art_file'], track_num=track_num)
 
