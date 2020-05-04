@@ -4,7 +4,7 @@ import os
 import sys
 
 import utils.youtube_utils as yt
-import utils.audio as audio_utils
+import utils.media as media_utils
 
 """
 This file reads a config file in the following format.
@@ -45,8 +45,8 @@ except Exception as e:
     track_num = int(os.path.basename(audio)[0:3])
 
 # convert to audio
-audio_utils.trim_media(video, config['start'], config['end'])
-audio_utils.video_to_audio(video, audio, replace=True)
-audio_utils.add_metadata(audio, config['album'], config['artist'],
+media_utils.trim_media(video, config['start'], config['end'])
+media_utils.video_to_audio(video, audio, replace=True)
+media_utils.add_metadata(audio, config['album'], config['artist'],
                          config['album_artist'], config['album_art_file'], track_num=track_num)
 # os.remove(video)

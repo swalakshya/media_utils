@@ -3,7 +3,7 @@ import os
 import re
 
 import utils.youtube_utils as yt
-import utils.audio as audio_utils
+import utils.media as media_utils
 
 """
 pip requirements:
@@ -228,8 +228,8 @@ def download_files(files_dict):
         track_num = int(os.path.basename(audio).split("_")[0])
 
         # convert to audio
-        audio_utils.video_to_audio(video, audio, replace=True)
-        audio_utils.add_metadata(audio, album, artist,
+        media_utils.video_to_audio(video, audio, replace=True)
+        media_utils.add_metadata(audio, album, artist,
                                  album_artist, album_art_file, track_num=track_num)
 
     if len(failed_files) > 0:
