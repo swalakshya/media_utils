@@ -1,6 +1,7 @@
 import os
 import subprocess
 import time
+import shutil
 import sys
 
 if sys.version_info[0] >= 3:
@@ -74,3 +75,37 @@ def video_to_audio(video_file, audio_file, replace=False):
     end = time.time()
     print("Converting to audio took %.2f seconds" % (end - start))
     return True
+
+def trim_media(media_file, start, end):
+    print_str = "Trimming the file"
+    if start:
+        print_str = "%s from %s" % (print_str, start)
+    else:
+        print_str = "%s from start" % print_str
+    if end:
+        print_str = "%s to %s" % (print_str, end)
+    else:
+        print_str = "%s to end" % print_str
+    start_time = time.time()
+    tmp_dir = "%s/tmp" % os.getenv("HOME")
+
+    if start is None and end is None:
+        return
+    print(print_str)
+    cmd = ["ffmpeg", "-i", media_file]
+    if start:
+        cmd += ["-ss", start]
+    if end:
+        cmd += ["-to", end]
+    cmd += ["-c", "copy"]
+    tmp_file = "%s/tmp.%s" % (tmp_dir, media_file[-3:])
+    cmd += [tmp_file]
+    print("Trim command: %s" % cmd)
+    if os.path.exists(tmp_file):
+        os.remove(tmp_file)
+
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc.communicate()
+    shutil.move(tmp_file, media_file)
+    end_time = time.time()
+    print("Trimming the file took %.2f seconds" % (end_time - start_time))

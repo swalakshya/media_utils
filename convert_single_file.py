@@ -18,6 +18,8 @@ This file reads a config file in the following format.
     "genre": <....>,
     "youtube_id": <...>,
     "output_file": <...>,
+    "start": <...>,
+    "end": <...>
 }
 """
 if len(sys.argv) < 2:
@@ -43,7 +45,8 @@ except Exception as e:
     track_num = int(os.path.basename(audio)[0:3])
 
 # convert to audio
+audio_utils.trim_media(video, config['start'], config['end'])
 audio_utils.video_to_audio(video, audio, replace=True)
 audio_utils.add_metadata(audio, config['album'], config['artist'],
                          config['album_artist'], config['album_art_file'], track_num=track_num)
-
+# os.remove(video)
