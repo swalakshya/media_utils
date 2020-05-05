@@ -3,6 +3,7 @@ import subprocess
 import time
 import shutil
 import sys
+import sox
 
 if sys.version_info[0] >= 3:
     from urllib.request import urlopen
@@ -109,3 +110,8 @@ def trim_media(media_file, start, end):
     shutil.move(tmp_file, media_file)
     end_time = time.time()
     print("Trimming the file took %.2f seconds" % (end_time - start_time))
+
+def combine_audio(audio1, audio2, audio_final):
+    cnb = sox.Combiner()
+    cnb.convert(samplerate=48000, n_channels=2)
+    cnb.build([audio1, audio2], audio_final, 'concatenate')
