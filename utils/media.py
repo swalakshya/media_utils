@@ -111,7 +111,17 @@ def trim_media(media_file, start, end):
     end_time = time.time()
     print("Trimming the file took %.2f seconds" % (end_time - start_time))
 
-def combine_audio(audio1, audio2, audio_final):
+def convert_bitrate(audio, bitrate="160000"):
+    audio_out = "tmp_%s" % audio
+    cmd = ['sox', audio, '-r', bitrate, audio_out]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc.communicate()
+    shutil.move(audio_out, audio)
+
+def combine_audio(input_audio_list, audio_final):
+    # First change to common bitrate
+    for f in input_audio_list:
+        convert_bitrate(f)
     cnb = sox.Combiner()
     cnb.convert(samplerate=48000, n_channels=2)
-    cnb.build([audio1, audio2], audio_final, 'concatenate')
+    cnb.build(input_audio_list, audio_final, 'concatenate')
