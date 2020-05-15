@@ -1,14 +1,10 @@
 # -*- coding: utf-8 -*-
-
-import subprocess
-import time
 import os
 
 import googleapiclient.discovery
 import googleapiclient.errors
 
 from youtube_dl import YoutubeDL
-
 
 def download_video(video_id, target_f):
     params = {
@@ -30,6 +26,10 @@ def download_video(video_id, target_f):
     return True
 
 
+"""This function requires google developers API key. This can be obtained from
+https://console.developers.google.com/
+Look at the credentials tab on the menu.
+"""
 def get_playlist_items(playlist_id, api_key, reverse=False):
     # Disable OAuthlib's HTTPS verification when running locally.
     # *DO NOT* leave this option enabled in production.
