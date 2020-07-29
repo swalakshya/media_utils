@@ -5,6 +5,8 @@ import shutil
 import sys
 import sox
 
+from utils import utils
+
 if sys.version_info[0] >= 3:
     from urllib.request import urlopen
 elif sys.version_info[0] < 3:
@@ -15,6 +17,7 @@ from mutagen.mp3 import EasyMP3
 from mutagen.id3 import APIC, ID3
 
 DEFAULT_PRESET = "H.265\ MKV\ 720p30"
+
 
 def add_metadata(target_f, album, artist, album_artist, album_art_file,
                   track_num=None, title=None, genre="Pravachan"):
@@ -66,23 +69,15 @@ def video_to_audio(video_file, audio_file, replace=False):
     if os.path.exists("audiodump.wav"):
         os.remove("audiodump.wav")
     print("Converting %s to audio %s" % (os.path.basename(video_file), os.path.basename(audio_file)))
-    proc = subprocess.Popen(["mplayer", "-novideo", "-nocorrect-pts", "-ao", "pcm:waveheader", video_file],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    proc.communicate()
-    retcode = proc.returncode
-    if retcode != 0:
-        return False
-    proc1 = subprocess.Popen(["lame", "-v", "audiodump.wav", audio_file],
-                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    proc1.communicate()
-    retcode = proc1.returncode
-    if retcode != 0:
-        return False
+    utils.run_shell_cmd_proc(["mplayer", "-novideo", "-nocorrect-pts", "-ao",
+                              "pcm:waveheader", video_file], hide_output=False)
+    utils.run_shell_cmd_proc(["lame", "-v", "audiodump.wav", audio_file], hide_output=False)
     os.remove("audiodump.wav")
 
     end = time.time()
     print("Converting to audio took %.2f seconds" % (end - start))
     return True
+
 
 def trim_media(media_file, start, end):
     print_str = "Trimming the file"
@@ -98,7 +93,7 @@ def trim_media(media_file, start, end):
     tmp_dir = "%s/tmp" % os.getenv("HOME")
 
     if start is None and end is None:
-        return
+        return True
     print(print_str)
     cmd = ["ffmpeg", "-i", media_file]
     if start:
@@ -112,26 +107,21 @@ def trim_media(media_file, start, end):
     if os.path.exists(tmp_file):
         os.remove(tmp_file)
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    proc.communicate()
-    retcode = proc.returncode
-    if retcode != 0:
-        return False
+    utils.run_shell_command(cmd)
     shutil.move(tmp_file, media_file)
     end_time = time.time()
     print("Trimming the file took %.2f seconds" % (end_time - start_time))
     return True
 
+
 def convert_bitrate(audio, bitrate="160000"):
     audio_out = "tmp_%s" % audio
     cmd = ['sox', audio, '-r', bitrate, audio_out]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    proc.communicate()
-    retcode = proc.returncode
-    if retcode != 0:
-        return False
+
+    utils.run_shell_command(cmd)
     shutil.move(audio_out, audio)
     return True
+
 
 def combine_audio(input_audio_list, audio_final):
     # First change to common bitrate
@@ -140,6 +130,7 @@ def combine_audio(input_audio_list, audio_final):
     cnb = sox.Combiner()
     cnb.convert(samplerate=48000, n_channels=2)
     cnb.build(input_audio_list, audio_final, 'concatenate')
+
 
 def combine_videos(source_dir, input_video_list, video_final):
     print("Converting videos %s to %s" % (str(input_video_list), video_final))
@@ -151,14 +142,10 @@ def combine_videos(source_dir, input_video_list, video_final):
         fh.write('file %s\n' % f)
     fh.close()
     cmd = [ "ffmpeg", "-f", "concat", "-i", "file.txt", video_final]
-    proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    proc.communicate()
-    retcode = proc.returncode
-    os.remove('file.txt')
-    if retcode != 0:
-        return False
+    utils.run_shell_command(cmd)
     os.chdir(curr_dir)
     return True
+
 
 def convert_video(input_video, output_video, preset_name=DEFAULT_PRESET,
                   preset_file=None):
@@ -174,9 +161,5 @@ def convert_video(input_video, output_video, preset_name=DEFAULT_PRESET,
     cmd += ["-Z", preset_name,
             "-i", input_video,
             "-o", output_video]
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    proc.communicate()
-    retcode = proc.returncode
-    if retcode != 0:
-        return False
+    utils.run_shell_command(cmd)
     return True

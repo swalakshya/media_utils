@@ -120,8 +120,12 @@ def download(config):
         track_num = int(os.path.basename(audio)[0:3])
 
     # convert to audio
-    media_utils.trim_media(video, config['start'], config['end'])
-    media_utils.video_to_audio(video, audio, replace=True)
+    if not media_utils.trim_media(video, config['start'], config['end']):
+        print("Unable to trim media.")
+        sys.exit(1)
+    if not media_utils.video_to_audio(video, audio, replace=True):
+        print("Unable to convert video to audio")
+        sys.exit(1)
     media_utils.add_metadata(audio, config['album'], config['artist'],
                              config['album_artist'], config['album_art_file'],
                              track_num=track_num)
