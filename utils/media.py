@@ -161,5 +161,5 @@ def convert_video(input_video, output_video, preset_name=DEFAULT_PRESET,
     cmd += ["-Z", preset_name,
             "-i", input_video,
             "-o", output_video]
-    utils.run_shell_command(cmd)
+    utils.run_shell_cmd_proc(cmd)
     return True
