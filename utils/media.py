@@ -16,7 +16,7 @@ elif sys.version_info[0] < 3:
 from mutagen.mp3 import EasyMP3
 from mutagen.id3 import APIC, ID3
 
-DEFAULT_PRESET = "H.265\ MKV\ 720p30"
+DEFAULT_PRESET = "H.265 MKV 576p25"
 
 
 def add_metadata(target_f, album, artist, album_artist, album_art_file,
@@ -61,7 +61,7 @@ def remove_metadata(target_f):
 
 def video_to_audio(video_file, audio_file, replace=False):
     if os.path.isfile(audio_file):
-        if replace:
+        if not replace:
             print("Skipping %s as it already exists" % audio_file)
             return False
         os.remove(audio_file)
@@ -161,5 +161,5 @@ def convert_video(input_video, output_video, preset_name=DEFAULT_PRESET,
     cmd += ["-Z", preset_name,
             "-i", input_video,
             "-o", output_video]
-    utils.run_shell_cmd_proc(cmd)
+    utils.run_shell_cmd_proc(cmd, hide_output=False)
     return True

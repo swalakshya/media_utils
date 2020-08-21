@@ -1,17 +1,21 @@
 # -*- coding: utf-8 -*-
 import os
+import shutil
 
 import googleapiclient.discovery
 import googleapiclient.errors
 
 from youtube_dl import YoutubeDL
 
+TMP_DIR = "%s/tmp" % (os.getenv("HOME"))
+
 def download_video(video_id, target_f):
+    tmp_file = "%s/yt_download_video.mp4" % TMP_DIR
     params = {
         'nocheckcertificate': True,
         'format': 'mp4',
         'ignoreerrors': True,
-        'outtmpl': target_f,
+        'outtmpl': tmp_file,
     }
 
     yt = YoutubeDL(params=params)
@@ -23,6 +27,8 @@ def download_video(video_id, target_f):
 
     if rc != 0:
         return False
+
+    shutil.move(tmp_file, target_f)
     return True
 
 
