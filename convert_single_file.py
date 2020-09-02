@@ -89,12 +89,16 @@ def main():
         download(nc)
 
 
-def download(config):
+def download(config, replace=False):
     video = os.path.join("%s/%s.mp4" % (config['video_path'], config['output_file']))
     audio = os.path.join("%s/%s.mp3" % (config['audio_path'], config['output_file']))
 
     if os.path.exists(video):
-        os.remove(video)
+        if not replace:
+            print("Skipping as the video file %s already exists!" % video)
+            return
+        else:
+            os.remove(video)
     if os.path.exists(audio):
         os.remove(audio)
 
