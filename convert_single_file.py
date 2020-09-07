@@ -88,19 +88,14 @@ def main():
             nc[key] = value
         download(nc)
 
-
-def download(config, replace=False):
+def download_video(config, replace=False):
     video = os.path.join("%s/%s.mp4" % (config['video_path'], config['output_file']))
-    audio = os.path.join("%s/%s.mp3" % (config['audio_path'], config['output_file']))
-
     if os.path.exists(video):
         if not replace:
             print("Skipping as the video file %s already exists!" % video)
             return
         else:
             os.remove(video)
-    if os.path.exists(audio):
-        os.remove(audio)
 
     if config['youtube_id'] is not None and config['youtube_parts'] is not None:
         print("Exactly one of youtube_id and youtube_parts should be set")
@@ -118,21 +113,34 @@ def download(config, replace=False):
             print("Unable to download and combine videos")
             sys.exit(1)
 
+    if not media_utils.trim_media(video, config['start'], config['end']):
+        print("Unable to trim media.")
+        sys.exit(1)
+
+
+def download_audio(config):
+    video = os.path.join("%s/%s.mp4" % (config['video_path'], config['output_file']))
+    audio = os.path.join("%s/%s.mp3" % (config['audio_path'], config['output_file']))
+    if os.path.exists(audio):
+        os.remove(audio)
     try:
         track_num = int(os.path.basename(audio).split("_")[0])
     except Exception as e:
         track_num = int(os.path.basename(audio)[0:3])
 
     # convert to audio
-    if not media_utils.trim_media(video, config['start'], config['end']):
-        print("Unable to trim media.")
-        sys.exit(1)
     if not media_utils.video_to_audio(video, audio, replace=True):
         print("Unable to convert video to audio")
         sys.exit(1)
     media_utils.add_metadata(audio, config['album'], config['artist'],
                              config['album_artist'], config['album_art_file'],
                              track_num=track_num)
+
+
+def download(config, replace=False):
+    download_video(config, replace)
+    download_audio(config)
+
 
 if __name__ == '__main__':
     main()

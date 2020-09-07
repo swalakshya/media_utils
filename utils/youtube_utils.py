@@ -28,6 +28,10 @@ def download_video(video_id, target_f):
     if rc != 0:
         return False
 
+    tmp_file_mkv = tmp_file.replace('.mp4', '.mkv')
+    if os.path.exists(tmp_file_mkv):
+        tmp_file = tmp_file_mkv
+
     shutil.move(tmp_file, target_f)
     return True
 
