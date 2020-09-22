@@ -16,7 +16,7 @@ elif sys.version_info[0] < 3:
 from mutagen.mp3 import EasyMP3
 from mutagen.id3 import APIC, ID3
 
-DEFAULT_PRESET = "H.265 MKV 576p25"
+DEFAULT_PRESET = "H.264 MKV 480p30"
 
 
 def add_metadata(target_f, album, artist, album_artist, album_art_file,

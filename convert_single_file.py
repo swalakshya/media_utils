@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import shutil
+import time
 from copy import deepcopy
 import utils.youtube_utils as yt
 import utils.media as media_utils
@@ -75,6 +76,8 @@ def main():
         sys.exit("ERROR: Provide a config file\n")
     config_file_path = sys.argv[1]
 
+    start = time.time()
+
     f = open(config_file_path, 'r')
     config = json.load(f)
 
@@ -87,6 +90,10 @@ def main():
         for key, value in video.items():
             nc[key] = value
         download(nc)
+
+    end = time.time()
+    print("Total time: %.2f secs." % (end - start))
+
 
 def download_video(config, replace=False):
     video = os.path.join("%s/%s.mp4" % (config['video_path'], config['output_file']))

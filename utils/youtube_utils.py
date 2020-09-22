@@ -5,11 +5,13 @@ import shutil
 import googleapiclient.discovery
 import googleapiclient.errors
 
+from utils import media
+
 from youtube_dl import YoutubeDL
 
 TMP_DIR = "%s/tmp" % (os.getenv("HOME"))
 
-def download_video(video_id, target_f):
+def download_video(video_id, target_f, force_encode=False):
     tmp_file = "%s/yt_download_video.mp4" % TMP_DIR
     params = {
         'nocheckcertificate': True,
@@ -29,10 +31,16 @@ def download_video(video_id, target_f):
         return False
 
     tmp_file_mkv = tmp_file.replace('.mp4', '.mkv')
+    should_encode = force_encode
     if os.path.exists(tmp_file_mkv):
         tmp_file = tmp_file_mkv
-
-    shutil.move(tmp_file, target_f)
+        should_encode = True
+    if should_encode:
+        print("Re-encoding file using handbrake %s" % tmp_file)
+        media.convert_video(tmp_file, target_f)
+        os.remove(tmp_file)
+    else:
+        shutil.move(tmp_file, target_f)
     return True
 
 
