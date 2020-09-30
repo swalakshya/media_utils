@@ -40,7 +40,8 @@ def download_video(video_id, target_f, force_encode=False):
         media.convert_video(tmp_file, target_f)
         os.remove(tmp_file)
     else:
-        shutil.move(tmp_file, target_f)
+        shutil.copy(tmp_file, target_f)
+        os.remove(tmp_file)
     return True
 
 

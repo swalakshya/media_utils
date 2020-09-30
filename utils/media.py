@@ -108,7 +108,8 @@ def trim_media(media_file, start, end):
         os.remove(tmp_file)
 
     utils.run_shell_command(cmd)
-    shutil.move(tmp_file, media_file)
+    shutil.copy(tmp_file, media_file)
+    os.remove(tmp_file)
     end_time = time.time()
     print("Trimming the file took %.2f seconds" % (end_time - start_time))
     return True
@@ -119,7 +120,8 @@ def convert_bitrate(audio, bitrate="160000"):
     cmd = ['sox', audio, '-r', bitrate, audio_out]
 
     utils.run_shell_command(cmd)
-    shutil.move(audio_out, audio)
+    shutil.copy(audio_out, audio)
+    os.remove(audio_out)
     return True
 
 
