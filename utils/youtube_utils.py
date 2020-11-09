@@ -31,9 +31,17 @@ def download_video(video_id, target_f, force_encode=False):
         return False
 
     tmp_file_mkv = tmp_file.replace('.mp4', '.mkv')
+    tmp_file_mkv1 = tmp_file + ".mkv"
+    tmp_file_webm = tmp_file + ".webm"
     should_encode = force_encode
     if os.path.exists(tmp_file_mkv):
         tmp_file = tmp_file_mkv
+        should_encode = True
+    elif os.path.exists(tmp_file_mkv1):
+        tmp_file = tmp_file_mkv1
+        should_encode = True
+    elif os.path.exists(tmp_file_webm):
+        tmp_file = tmp_file_webm
         should_encode = True
     if should_encode:
         print("Re-encoding file using handbrake %s" % tmp_file)
