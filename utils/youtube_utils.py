@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import shutil
+import time
 
 import googleapiclient.discovery
 import googleapiclient.errors
@@ -12,6 +13,10 @@ from youtube_dl import YoutubeDL
 TMP_DIR = "%s/tmp" % (os.getenv("HOME"))
 
 def download_video(video_id, target_f, force_encode=False):
+    start = time.time()
+    if os.path.exists(TMP_DIR):
+        shutil.rmtree(TMP_DIR)
+    os.makedirs(TMP_DIR)
     tmp_file = "%s/yt_download_video.mp4" % TMP_DIR
     params = {
         'nocheckcertificate': True,
@@ -50,6 +55,9 @@ def download_video(video_id, target_f, force_encode=False):
     else:
         shutil.copy(tmp_file, target_f)
         os.remove(tmp_file)
+    end_time = time.time()
+    total_time = end_time - start
+    print("Downloading video took %0.0f seconds" % total_time)
     return True
 
 
