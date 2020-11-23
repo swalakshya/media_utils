@@ -20,7 +20,7 @@ def download_video(video_id, target_f, force_encode=False):
     tmp_file = "%s/yt_download_video.mp4" % TMP_DIR
     params = {
         'nocheckcertificate': True,
-        'format': 'bestvideo+bestaudio',
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]',
         'ignoreerrors': True,
         'outtmpl': tmp_file,
     }
