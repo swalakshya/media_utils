@@ -39,7 +39,7 @@ def download_videos_and_combine(video_list, video_final):
     for v in video_list:
         video_name = "v%d.mp4" % i
         tmp_vname = "tmpv%d.mp4" % i
-        if not yt.download_video(v, tmp_vname):
+        if not yt.download_video(v, tmp_vname, clean_tmp=False):
             print("Couldn't download %s" % v)
             sys.exit(1)
         videos.append(video_name)

@@ -12,11 +12,12 @@ from youtube_dl import YoutubeDL
 
 TMP_DIR = "%s/tmp" % (os.getenv("HOME"))
 
-def download_video(video_id, target_f, force_encode=False):
+def download_video(video_id, target_f, force_encode=False, clean_tmp=True):
     start = time.time()
-    if os.path.exists(TMP_DIR):
-        shutil.rmtree(TMP_DIR)
-    os.makedirs(TMP_DIR)
+    if clean_tmp:
+        if os.path.exists(TMP_DIR):
+            shutil.rmtree(TMP_DIR)
+        os.makedirs(TMP_DIR)
     tmp_file = "%s/yt_download_video.mp4" % TMP_DIR
     params = {
         'nocheckcertificate': True,
