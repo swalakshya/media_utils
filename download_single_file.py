@@ -104,6 +104,12 @@ def download_video(config, replace=False):
         else:
             os.remove(video)
 
+    if config['local_path'] is not None:
+        print("Local video path provided. Not downloading...")
+        # Download and convert video
+        media_utils.convert_video(config['local_path'], video)
+        return
+
     if config['youtube_id'] is not None and config['youtube_parts'] is not None:
         print("Exactly one of youtube_id and youtube_parts should be set")
         sys.exit(1)
