@@ -132,6 +132,8 @@ def download_video(config, replace=False):
 
 
 def download_audio(config):
+    if (not ('audio_path' in config.keys())) or (config['audio_path'] is None):
+        return
     video = os.path.join("%s/%s.mp4" % (config['video_path'], config['output_file']))
     audio = os.path.join("%s/%s.mp3" % (config['audio_path'], config['output_file']))
     if os.path.exists(audio):
