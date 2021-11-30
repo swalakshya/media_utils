@@ -2,6 +2,7 @@
 import os
 import shutil
 import time
+import yt_dlp
 
 import googleapiclient.discovery
 import googleapiclient.errors
@@ -12,7 +13,7 @@ from youtube_dl import YoutubeDL
 
 TMP_DIR = "%s/tmp" % (os.getenv("HOME"))
 
-def download_video(video_id, target_f, force_encode=False, clean_tmp=True):
+def download_video(video_id, target_f, force_encode=False, clean_tmp=True, use_ytlp=True):
     start = time.time()
     if clean_tmp:
         if os.path.exists(TMP_DIR):
@@ -26,7 +27,10 @@ def download_video(video_id, target_f, force_encode=False, clean_tmp=True):
         'outtmpl': tmp_file,
     }
 
-    yt = YoutubeDL(params=params)
+    if use_ytlp:
+        yt = yt_dlp.YoutubeDL(params)
+    else:
+        yt = YoutubeDL(params)
     rc = 0
     try:
         rc = yt.download([video_id])
