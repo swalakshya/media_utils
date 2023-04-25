@@ -1,5 +1,4 @@
 import os
-import subprocess
 import time
 import shutil
 import sys
@@ -79,7 +78,7 @@ def video_to_audio(video_file, audio_file, replace=False):
     return True
 
 
-def trim_media(media_file, start, end):
+def trim_media(media_file, start, end, dry=False):
     print_str = "Trimming the file"
     if start:
         print_str = "%s from %s" % (print_str, start)
@@ -104,12 +103,13 @@ def trim_media(media_file, start, end):
     tmp_file = "%s/tmp.%s" % (tmp_dir, media_file[-3:])
     cmd += [tmp_file]
     print("Trim command: %s" % cmd)
-    if os.path.exists(tmp_file):
-        os.remove(tmp_file)
+    if not dry:
+        if os.path.exists(tmp_file):
+            os.remove(tmp_file)
 
-    utils.run_shell_command(cmd)
-    shutil.copy(tmp_file, media_file)
-    os.remove(tmp_file)
+        utils.run_shell_command(cmd)
+        shutil.copy(tmp_file, media_file)
+        os.remove(tmp_file)
     end_time = time.time()
     print("Trimming the file took %.2f seconds" % (end_time - start_time))
     return True
