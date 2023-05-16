@@ -42,10 +42,10 @@ def add_metadata(target_f, album, artist, album_artist, album_art_file,
 
     mp3.tags.add(
         APIC(
-            encoding = 3,
-            mime = "image/jpg",
+            # encoding = 3,
+            mime = "image/jpeg",
             type = 3,
-            desc = "cover",
+            desc = u'Cover',
             data = urlopen("file://%s" % album_art_file).read()
         )
     )
@@ -75,6 +75,24 @@ def video_to_audio(video_file, audio_file, replace=False):
 
     end = time.time()
     print("Converting to audio took %.2f seconds" % (end - start))
+    return True
+
+
+def audio_to_video(audio_file, image_file, video_file, replace=False):
+    if os.path.isfile(video_file):
+        if not replace:
+            print("Skipping %s as it already exists" % video_file)
+            return False
+        os.remove(video_file)
+
+    start = time.time()
+    print("Converting audio file %s to video using static image %s" % (audio_file, image_file))
+    cmd = ["ffmpeg", "-loop", "1", "-i", image_file, "-i", audio_file,
+           "-c:v", "libx264", "-tune", "stillimage", "-c:a", "aac", "-b:a", "192k",
+           "-pix_fmt", "yuv420p", "-shortest", video_file]
+    utils.run_shell_command(cmd, hide_output=False)
+    end = time.time()
+    print("Converting to vidoe took %.2f seconds" % (end - start))
     return True
 
 
