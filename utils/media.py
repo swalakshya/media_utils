@@ -183,3 +183,26 @@ def convert_video(input_video, output_video, preset_name=DEFAULT_PRESET,
             "-o", output_video]
     utils.run_shell_cmd_proc(cmd, hide_output=False)
     return True
+
+def add_subtitles(input_video, subtitles_file, video_final, title=None):
+    print("Adding subtitles %s to video %s" % (subtitles_file, input_video))
+    cmd = [
+        "ffmpeg", "-i", input_video, "-i", subtitles_file, "-c", "copy", "-c:s", "mov_text", "-metadata:s:s:0"
+    ]
+    if title is not None:
+        cmd += [ "title=%s" % title]
+    cmd += [video_final]
+    utils.run_shell_cmd_proc(cmd, hide_output=False)
+    return True
+
+"""
+def burn_subtitles(input_video, subtitles_file, output_video, title=None,
+                   font_name=None, font_size=None, font_colour=None):
+    print("Burning subtitles %s to video %s") % (subtitles_file, input_video)
+
+    # Step 1. Convert file to .ass
+    if not subtitles_file.endswith("ass"):
+        new_subtitles_file =
+
+    # Step 2. Burn the subtitles into the file
+"""
