@@ -18,6 +18,40 @@ from mutagen.id3 import APIC, ID3
 
 DEFAULT_PRESET = "H.264 MKV 480p30"
 
+def download_subtitles(yt_id, output_folder, sub_format="vtt",
+                       auto_gen=True, lang="hi"):
+    print("Downloading subtitles for ID %s, format %s, lang %s, auto %s in folder %s" %(
+        yt_id, sub_format, lang, auto_gen, output_folder
+    ))
+    if sub_format not in ["vtt", "srt"]:
+        print("Incompatible format %s" % (sub_format))
+        return False
+
+    command = [ "yt-dlp" ]
+    if auto_gen:
+        command = command + ["--write-auto-sub", "--no-check-certificate"]
+
+    command = command + [
+        "--sub-lang", lang
+    ]
+    if sub_format == "srt":
+        command = command + [
+            "--convert-subtitles", sub_format
+        ]
+    command = command + [
+        "--skip-download",
+        yt_id
+    ]
+
+    curr_dir = os.getcwd()
+    os.chdir(output_folder)
+    print("Command %s" % ' '.join(command))
+    ret = utils.run_shell_command(command)
+    if not ret:
+        print("Command Failed!")
+        sys.exit(1)
+    os.chdir(curr_dir)
+
 
 def add_metadata(target_f, album, artist, album_artist, album_art_file,
                   track_num=None, title=None, genre="Pravachan"):
@@ -242,7 +276,10 @@ def burn_subtitles(input_video, subtitles_file, output_video, title=None,
 
 def sbv_to_txt(input_file, output_file=None):
     if output_file is None:
-        output_file = input_file.replace('.sbv', '.txt')
+        if input_file.endswith("sbv"):
+            output_file = input_file.replace('.sbv', '.txt')
+        if input_file.endswith("srt"):
+            output_file = input_file.replace('.srt', '.txt')
 
     print("Converting input subtitle file %s into output text file %s" % (
         input_file, output_file
@@ -254,6 +291,12 @@ def sbv_to_txt(input_file, output_file=None):
         line = line.strip()
         if ':' in line:
             continue
+        # ignore lines which only have numbers in it
+        try:
+            val = int(line)
+            continue
+        except ValueError:
+            pass
         output_txt.append(line)
 
     output_str = ' '.join(output_txt)
