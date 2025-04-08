@@ -9,8 +9,9 @@ from utils import utils
 if sys.version_info[0] >= 3:
     from urllib.request import urlopen
 elif sys.version_info[0] < 3:
-    from urllib import quote_plus, quote
     from urllib import urlopen
+
+from google.cloud import speech
 
 from mutagen.mp3 import EasyMP3
 from mutagen.id3 import APIC, ID3
@@ -195,6 +196,38 @@ def add_subtitles(input_video, subtitles_file, video_final, title=None):
     utils.run_shell_cmd_proc(cmd, hide_output=False)
     return True
 
+
+# This is Work in Progress
+# Do not use it yet!
+def audio_to_text(input_audio,
+    encoding=speech.RecognitionConfig.AudioEncoding.MP3,
+    language='hi'):
+    client = speech.SpeechClient()
+
+    with open(input_audio, 'rb') as f:
+        audio_content = f.read()
+
+    audio = speech.RecognitionAudio(content=audio_content)
+    config = speech.RecognitionConfig(
+        encoding=encoding,
+        sample_rate_hertz=8000,
+        language_code=language,
+        use_enhanced=True,
+        # A model must be specified to use enhanced model.
+        model="phone_call",
+    )
+
+    response = client.recognize(config=config, audio=audio)
+
+    for i, result in enumerate(response.results):
+        alternative = result.alternatives[0]
+        print("-" * 20)
+        print(f"First alternative of result {i}")
+        print(f"Transcript: {alternative.transcript}")
+
+    return response
+
+
 """
 def burn_subtitles(input_video, subtitles_file, output_video, title=None,
                    font_name=None, font_size=None, font_colour=None):
@@ -206,3 +239,26 @@ def burn_subtitles(input_video, subtitles_file, output_video, title=None,
 
     # Step 2. Burn the subtitles into the file
 """
+
+def sbv_to_txt(input_file, output_file=None):
+    if output_file is None:
+        output_file = input_file.replace('.sbv', '.txt')
+
+    print("Converting input subtitle file %s into output text file %s" % (
+        input_file, output_file
+    ))
+
+    output_txt = []
+    fh = open(input_file, 'r')
+    for line in fh.readlines():
+        line = line.strip()
+        if ':' in line:
+            continue
+        output_txt.append(line)
+
+    output_str = ' '.join(output_txt)
+    output_str = output_str.replace('  ', ' ')
+
+    oh = open(output_file, 'w')
+    oh.write(output_str)
+    oh.close()
