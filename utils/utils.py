@@ -24,6 +24,7 @@ def run_shell_command(cmd_arg_list, exit_on_failure=True, hide_output=True):
 def run_shell_cmd_proc(cmd_arg_list, hide_output=True, exit_on_failure=True):
     so = None
     se = None
+    print("Running command %s" % (cmd_arg_list))
     if hide_output:
         so = subprocess.PIPE
         se = subprocess.PIPE

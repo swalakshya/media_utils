@@ -16,42 +16,7 @@ from google.cloud import speech
 from mutagen.mp3 import EasyMP3
 from mutagen.id3 import APIC, ID3
 
-DEFAULT_PRESET = "H.264 MKV 480p30"
-
-def download_subtitles(yt_id, output_folder, sub_format="vtt",
-                       auto_gen=True, lang="hi"):
-    print("Downloading subtitles for ID %s, format %s, lang %s, auto %s in folder %s" %(
-        yt_id, sub_format, lang, auto_gen, output_folder
-    ))
-    if sub_format not in ["vtt", "srt"]:
-        print("Incompatible format %s" % (sub_format))
-        return False
-
-    command = [ "yt-dlp" ]
-    if auto_gen:
-        command = command + ["--write-auto-sub", "--no-check-certificate"]
-
-    command = command + [
-        "--sub-lang", lang
-    ]
-    if sub_format == "srt":
-        command = command + [
-            "--convert-subtitles", sub_format
-        ]
-    command = command + [
-        "--skip-download",
-        yt_id
-    ]
-
-    curr_dir = os.getcwd()
-    os.chdir(output_folder)
-    print("Command %s" % ' '.join(command))
-    ret = utils.run_shell_command(command)
-    if not ret:
-        print("Command Failed!")
-        sys.exit(1)
-    os.chdir(curr_dir)
-
+TMP_DIR = "%s/tmp" % (os.getenv("HOME"))
 
 def add_metadata(target_f, album, artist, album_artist, album_art_file,
                   track_num=None, title=None, genre="Pravachan"):
@@ -202,21 +167,32 @@ def combine_videos(source_dir, input_video_list, video_final):
     return True
 
 
-def convert_video(input_video, output_video, preset_name=DEFAULT_PRESET,
-                  preset_file=None):
+def convert_video(input_video, output_video, res,
+                  replace=False):
     """
     This is to convert a video to a H265 format using handbrake. This can be used
     to later combine two videos from YouTube which may not necessarily be in the same
     format leading to problems in combining them.
     """
-    print("Converting video %s to %s using preset %s" % (input_video, output_video, preset_name))
+    if res not in ["1080", "720", "480"]:
+        print("res should be one of 1080, 720, 480")
+        sys.exit(1)
+    print("Converting video %s to %s using res %s" % (input_video, output_video, res))
     cmd = ["HandBrakeCLI"]
-    if preset_file:
-        cmd +=  ["--preset-import-file", preset_file]
-    cmd += ["-Z", preset_name,
+    preset = "Fast %sp30" % res
+
+    if replace:
+        fname = os.path.basename(input_video)
+        output_video = "%s/%s" % (TMP_DIR, fname)
+
+    cmd += ["-Z", preset,
             "-i", input_video,
             "-o", output_video]
-    utils.run_shell_cmd_proc(cmd, hide_output=False)
+    ret = utils.run_shell_cmd_proc(cmd, hide_output=False)
+
+    if ret and replace:
+        shutil.move(output_video, input_video)
+
     return True
 
 def add_subtitles(input_video, subtitles_file, video_final, title=None):
