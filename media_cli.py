@@ -49,6 +49,7 @@ def burn_subtitles(input_file, vtt_file, output_file):
     ass_file = vtt_file.replace(".vtt", ".ass")
     vtt_to_ass(vtt_file, ass_file)
     add_subtitles(input_file, ass_file, output_file)
+    os.remove(ass_file)
 
 
 def main(parser_args):
