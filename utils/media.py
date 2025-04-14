@@ -198,14 +198,10 @@ def convert_video(input_video, output_video, res,
 
     return True
 
-def add_subtitles(input_video, subtitles_file, video_final, title=None):
+def add_subtitles(input_video, subtitles_file, video_final):
     print("Adding subtitles %s to video %s" % (subtitles_file, input_video))
     cmd = [
-        "ffmpeg", "-i", input_video, "-i", subtitles_file, "-c", "copy", "-c:s", "mov_text", "-metadata:s:s:0"
-    ]
-    if title is not None:
-        cmd += [ "title=%s" % title]
-    cmd += [video_final]
+        "ffmpeg", "-i", input_video, "-vf", "ass=%s" % subtitles_file, video_final]
     utils.run_shell_cmd_proc(cmd, hide_output=False)
     return True
 

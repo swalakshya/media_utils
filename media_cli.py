@@ -4,6 +4,8 @@ import sys
 
 from utils import media
 from utils import youtube_utils
+from utils.media import add_subtitles
+
 
 def sbv_to_txt(input_file, output_file):
     media.sbv_to_txt(input_file, output_file)
@@ -43,6 +45,12 @@ def vtt_to_ass(input_file, output_file):
 
     media.vtt_to_ass(input_file, output_file)
 
+def burn_subtitles(input_file, vtt_file, output_file):
+    ass_file = vtt_file.replace(".vtt", ".ass")
+    vtt_to_ass(vtt_file, ass_file)
+    add_subtitles(input_file, ass_file, output_file)
+
+
 def main(parser_args):
     if parser_args.command == "sbv_to_txt":
         sbv_to_txt(parser_args.input_file, parser_args.output_file)
@@ -62,6 +70,12 @@ def main(parser_args):
     elif parser_args.command == "vtt_to_ass":
         vtt_to_ass(parser_args.input_file,
                    parser_args.output_file)
+
+    elif parser_args.command == "burn_subtitles":
+        burn_subtitles(
+            parser_args.input_file, parser_args.vtt_file,
+            parser_args.output_file
+        )
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Media Utilities")
@@ -137,6 +151,22 @@ if __name__ == '__main__':
     vtt_ass.add_argument(
         "--output_file", "-o", type=str,
         help="Output ass file"
+    )
+
+    brn_subtitles = sub_parsers.add_parser(
+        "burn_subtitles",
+        help="Burn subtitles into the video file"
+    )
+
+    brn_subtitles.add_argument(
+        "--input_file", "-i", type=str,
+        help="Input video file")
+    brn_subtitles.add_argument(
+        "--vtt_file", "-v", type=str,
+        help="Subtitles (vtt) file")
+    brn_subtitles.add_argument(
+        "--output_file", "-o", type=str,
+        help="Output video file"
     )
 
     args = parser.parse_args()
