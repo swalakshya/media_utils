@@ -5,3 +5,7 @@ sox
 google_api_python_client
 google-cloud-speech
 yt_dlp
+youtube-transcript-api
+google-cloud-storage
+webvtt-py
+pysubs2

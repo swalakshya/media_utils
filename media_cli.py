@@ -37,6 +37,12 @@ def transcode_video(
                         res, replace_input_file)
 
 
+def vtt_to_ass(input_file, output_file):
+    if output_file is None:
+        output_file = input_file.replace(".vtt", ".ass")
+
+    media.vtt_to_ass(input_file, output_file)
+
 def main(parser_args):
     if parser_args.command == "sbv_to_txt":
         sbv_to_txt(parser_args.input_file, parser_args.output_file)
@@ -53,6 +59,9 @@ def main(parser_args):
             parser_args.output_file
         )
 
+    elif parser_args.command == "vtt_to_ass":
+        vtt_to_ass(parser_args.input_file,
+                   parser_args.output_file)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Media Utilities")
@@ -115,6 +124,19 @@ if __name__ == '__main__':
     transcode_vid.add_argument(
         "--output_file", "-o",
         type=str, help="Output File (or folder)"
+    )
+
+    vtt_ass = sub_parsers.add_parser(
+        "vtt_to_ass",
+        help="Convert vtt to ass file"
+    )
+    vtt_ass.add_argument(
+        "--input_file", "-i", type=str,
+        help="Input vtt file"
+    )
+    vtt_ass.add_argument(
+        "--output_file", "-o", type=str,
+        help="Output ass file"
     )
 
     args = parser.parse_args()

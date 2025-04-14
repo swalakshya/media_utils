@@ -3,6 +3,9 @@ import time
 import shutil
 import sys
 import sox
+import webvtt
+import pysubs2
+from pysubs2 import Color, Alignment
 
 from utils import utils
 
@@ -92,7 +95,7 @@ def audio_to_video(audio_file, image_file, video_file, replace=False):
            "-pix_fmt", "yuv420p", "-shortest", video_file]
     utils.run_shell_command(cmd, hide_output=False)
     end = time.time()
-    print("Converting to vidoe took %.2f seconds" % (end - start))
+    print("Converting to video took %.2f seconds" % (end - start))
     return True
 
 
@@ -281,3 +284,67 @@ def sbv_to_txt(input_file, output_file=None):
     oh = open(output_file, 'w')
     oh.write(output_str)
     oh.close()
+
+def vtt_to_ass(vtt_file, ass_file, font_name="Eczar", font_size=24,
+               bg_color=(0, 0, 0, 128), fg_color=(255, 255, 255)):
+    """
+    Converts a VTT subtitle file to an ASS subtitle file with custom styling.
+
+    Args:
+        vtt_file (str): Path to the input VTT file.
+        ass_file (str): Path to the output ASS file.
+        font_name (str): Name of the font to use in the ASS file.
+        font_size (int): Font size for the subtitles.
+        bg_color (tuple): Background color as (red, green, blue, alpha) - integers 0-255.
+        fg_color (tuple): Foreground color as (red, green, blue) - integers 0-255.
+    """
+    try:
+        # Load the VTT file
+        captions = webvtt.read(vtt_file)
+
+        # Create a new SubRipFile object for ASS
+        subs = pysubs2.SSAFile()
+
+        # Set default style
+        style = pysubs2.SSAStyle(
+            fontname=font_name,
+            fontsize=font_size,
+            primarycolor=Color(fg_color[2], fg_color[1], fg_color[0], 0),  # ASS uses BGR
+            secondarycolor=Color(fg_color[2], fg_color[1], fg_color[0], 0),
+            outlinecolor=Color(0, 0, 0, 0),  # Optional outline
+            backcolor=Color(bg_color[2], bg_color[1], bg_color[0], bg_color[3]), # ASS uses BGR with alpha
+            borderstyle=4,  # 1=Outline + opaque box, 3=Opaque box only
+            outline=1,      # Outline width
+            shadow=0,       # Shadow depth
+            alignment=Alignment.BOTTOM_CENTER,    # 2=Bottom center
+            marginl=10,
+            marginr=10,
+            marginv=10,
+            bold=False,
+            italic=False,
+            underline=False,
+            strikeout=False,
+            scalex=100,
+            scaley=100,
+            spacing=0,
+            angle=0,
+        )
+        subs.styles["Default"] = style
+
+        # Convert VTT cues to ASS events
+        for caption in captions:
+            start_ms = int(caption.start_in_seconds * 1000)
+            end_ms = int(caption.end_in_seconds * 1000)
+            text = caption.text.replace("\n", "\\N")  # Use \N for newlines in ASS
+
+            event = pysubs2.SSAEvent(start=start_ms, end=end_ms, text=text, style="Default")
+            subs.events.append(event)
+
+        # Save the subtitles to an ASS file
+        subs.save(ass_file)
+        print(f"Successfully converted '{vtt_file}' to '{ass_file}' with custom styling.")
+
+    except FileNotFoundError:
+        print(f"Error: Input VTT file '{vtt_file}' not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
