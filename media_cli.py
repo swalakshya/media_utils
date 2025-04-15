@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 
+import utils.media
 from utils import media
 from utils import youtube_utils
 from utils.media import add_subtitles
@@ -51,6 +52,11 @@ def burn_subtitles(input_file, vtt_file, output_file):
     add_subtitles(input_file, ass_file, output_file)
     os.remove(ass_file)
 
+def audio_to_video(audio, image, video):
+    if video is None:
+        video = audio.replace(".mp3", ".mp4")
+    utils.media.audio_to_video(audio, image, video, replace=True)
+
 
 def main(parser_args):
     if parser_args.command == "sbv_to_txt":
@@ -76,6 +82,12 @@ def main(parser_args):
         burn_subtitles(
             parser_args.input_file, parser_args.vtt_file,
             parser_args.output_file
+        )
+
+    elif parser_args.command == "audio_to_video":
+        audio_to_video(
+            parser_args.audio, parser_args.image,
+            parser_args.output
         )
 
 if __name__ == '__main__':
@@ -168,6 +180,26 @@ if __name__ == '__main__':
     brn_subtitles.add_argument(
         "--output_file", "-o", type=str,
         help="Output video file"
+    )
+
+    aud_to_vid = sub_parsers.add_parser(
+        "audio_to_video",
+        help="Convert audio file to video using a static image file"
+    )
+
+    aud_to_vid.add_argument(
+        "--audio", "-a", type=str,
+        help="Audio file"
+    )
+
+    aud_to_vid.add_argument(
+        "--image", "-i", type=str,
+        help="Image File"
+    )
+
+    aud_to_vid.add_argument(
+        "--output", "-o", type=str,
+        help="Output file path (optional)"
     )
 
     args = parser.parse_args()

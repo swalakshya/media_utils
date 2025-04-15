@@ -237,18 +237,6 @@ def audio_to_text(input_audio,
     return response
 
 
-"""
-def burn_subtitles(input_video, subtitles_file, output_video, title=None,
-                   font_name=None, font_size=None, font_colour=None):
-    print("Burning subtitles %s to video %s") % (subtitles_file, input_video)
-
-    # Step 1. Convert file to .ass
-    if not subtitles_file.endswith("ass"):
-        new_subtitles_file =
-
-    # Step 2. Burn the subtitles into the file
-"""
-
 def sbv_to_txt(input_file, output_file=None):
     if output_file is None:
         if input_file.endswith("sbv"):
