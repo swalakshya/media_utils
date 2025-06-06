@@ -9,3 +9,4 @@ youtube-transcript-api
 google-cloud-storage
 webvtt-py
 pysubs2
+openai-whisper

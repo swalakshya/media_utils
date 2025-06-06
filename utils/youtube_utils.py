@@ -8,6 +8,7 @@ import googleapiclient.discovery
 import googleapiclient.errors
 
 from utils import media
+from utils import utils
 
 from youtube_dl import YoutubeDL
 
@@ -42,7 +43,7 @@ def download_subtitles(yt_id, output_folder, sub_format="vtt",
     curr_dir = os.getcwd()
     os.chdir(output_folder)
     print("Command %s" % ' '.join(command))
-    ret = utils.run_shell_command(command)
+    ret = utils.run_shell_command(command, hide_output=False)
     os.chdir(curr_dir)
     return ret
 

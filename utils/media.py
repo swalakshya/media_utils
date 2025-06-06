@@ -243,6 +243,8 @@ def sbv_to_txt(input_file, output_file=None):
             output_file = input_file.replace('.sbv', '.txt')
         if input_file.endswith("srt"):
             output_file = input_file.replace('.srt', '.txt')
+        if input_file.endswith("vtt"):
+            output_file = input_file.replace(".vtt", ".txt")
 
     print("Converting input subtitle file %s into output text file %s" % (
         input_file, output_file
@@ -332,3 +334,18 @@ def vtt_to_ass(vtt_file, ass_file, font_name="Eczar", font_size=24,
         print(f"Error: Input VTT file '{vtt_file}' not found.")
     except Exception as e:
         print(f"An error occurred: {e}")
+
+def convert_mono_audio_to_stereo(input_file, output_file=None):
+    replace = False
+    if output_file is None:
+        output_file = "%s/%s.mp3" % (TMP_DIR, "tmp_audio")
+        replace = True
+
+    cmd = [
+        "ffmpeg", "-i", input_file, "-ac", "2", "-af",
+        "pan=stereo|c0=c0|c1=c0", output_file
+    ]
+
+    utils.run_shell_command(cmd)
+    if replace:
+        shutil.move(output_file, input_file)

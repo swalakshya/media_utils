@@ -57,6 +57,9 @@ def audio_to_video(audio, image, video):
         video = audio.replace(".mp3", ".mp4")
     utils.media.audio_to_video(audio, image, video, replace=True)
 
+def mono_stereo(input_file, output_file=None):
+    media.convert_mono_audio_to_stereo(input_file, output_file)
+
 
 def main(parser_args):
     if parser_args.command == "sbv_to_txt":
@@ -88,6 +91,11 @@ def main(parser_args):
         audio_to_video(
             parser_args.audio, parser_args.image,
             parser_args.output
+        )
+
+    elif parser_args.command == "mono_to_stereo":
+        mono_stereo(
+            parser_args.input_file, parser_args.output_file
         )
 
 if __name__ == '__main__':
@@ -202,6 +210,40 @@ if __name__ == '__main__':
         help="Output file path (optional)"
     )
 
+    trans_aud = sub_parsers.add_parser(
+        "transcribe_audio",
+        help="Generate captions for the audio file"
+    )
+
+    # trans_aud.add_argument(
+    #     "--input_file", "-i", type=str,
+    #     help="Input audio file"
+    # )
+    # trans_aud.add_argument(
+    #     "--language", "-l", type=str,
+    #     default="hi", help="Audio language (hi/gu)"
+    # )
+    # trans_aud.add_argument(
+    #     "--output_file", "-o", type=str,
+    #     help="Output File"
+    # )
+    # trans_aud.add_argument(
+    #     "--generate_vtt", default=False,
+    #     help="Generate vtt file as well?"
+    # )
+
+    mono_to_stereo = sub_parsers.add_parser(
+        "mono_to_stereo",
+        help="Convert a mono-track video/audio file to a stereo file"
+    )
+    mono_to_stereo.add_argument(
+        "--input_file", "-i", type=str,
+        help="Input audio/video file"
+    )
+    mono_to_stereo.add_parser(
+        "--output_file", "-o", type=str,
+        help="Output audio/video file. If NULL, then the input file will be replaced."
+    )
     args = parser.parse_args()
 
     main(args)
