@@ -240,7 +240,7 @@ if __name__ == '__main__':
         "--input_file", "-i", type=str,
         help="Input audio/video file"
     )
-    mono_to_stereo.add_parser(
+    mono_to_stereo.add_argument(
         "--output_file", "-o", type=str,
         help="Output audio/video file. If NULL, then the input file will be replaced."
     )
