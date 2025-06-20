@@ -60,6 +60,9 @@ def audio_to_video(audio, image, video):
 def mono_stereo(input_file, output_file=None):
     media.convert_mono_audio_to_stereo(input_file, output_file)
 
+def trim_media_func(input_file, start_time=None, end_time=None):
+    media.trim_media(input_file, start_time, end_time)
+
 
 def main(parser_args):
     if parser_args.command == "sbv_to_txt":
@@ -96,6 +99,12 @@ def main(parser_args):
     elif parser_args.command == "mono_to_stereo":
         mono_stereo(
             parser_args.input_file, parser_args.output_file
+        )
+
+    elif parser_args.command == "trim_media":
+        trim_media_func(
+            parser_args.input_file, parser_args.start_time,
+            parser_args.end_time
         )
 
 if __name__ == '__main__':
@@ -244,6 +253,24 @@ if __name__ == '__main__':
         "--output_file", "-o", type=str,
         help="Output audio/video file. If NULL, then the input file will be replaced."
     )
+
+    trim_media_parser = sub_parsers.add_parser(
+        "trim_media",
+        help="Trim a video/audio file in place"
+    )
+    trim_media_parser.add_argument(
+        "--input_file", "-i", type=str,
+        help="Input audio/video file"
+    )
+    trim_media_parser.add_argument(
+        "--start_time", "-s", type=str,
+        help="Start time. If none, video is not cut at start"
+    )
+    trim_media_parser.add_argument(
+        "--end-time", "-e", type=str,
+        help="End time. If none, video is not at end"
+    )
+
     args = parser.parse_args()
 
     main(args)
