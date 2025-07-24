@@ -16,43 +16,80 @@ elif sys.version_info[0] < 3:
 
 from google.cloud import speech
 
-from mutagen.mp3 import EasyMP3
-from mutagen.id3 import APIC, ID3
+from mutagen.mp3 import EasyMP3, MP3
+from mutagen.id3 import APIC, ID3, TIT2, TALB, TPE1, TCON, TPE2
 
 TMP_DIR = "%s/tmp" % (os.getenv("HOME"))
 
-def add_metadata(target_f, album, artist, album_artist, album_art_file,
-                  track_num=None, title=None, genre="Pravachan"):
-    # Taken from https://www.programcreek.com/python/example/63462/mutagen.mp3.EasyMP3
-    # https://github.com/cooperhammond/irs/blob/master/irs/interact/tagger.py
+def add_mp3_metadata(
+        file_path: str,
+        title: str,
+        artist: str,  # Added artist field
+        album: str,
+        album_artist: str,
+        genre: str,
+        album_art_path: str = None
+):
+    """
+    Adds metadata (title, artist, album, album artist, genre, and album art) to an MP3 file.
 
-    tags = EasyMP3(target_f)
-    # tags["title"] = title
-    tags["artist"] = artist
-    tags["album"] = album
-    tags["albumartist"] = album_artist
-    if track_num is not None:
-        tags["tracknumber"] = str(track_num)
-    if title is not None:
-        tags["title"] = title
-    tags.save()
-
-    mp3 = EasyMP3(target_f, ID3=ID3)
+    Args:
+        file_path (str): The path to the MP3 file.
+        title (str): The title of the song.
+        artist (str): The artist(s) of the specific track.
+        album (str): The album name.
+        album_artist (str): The album artist (main artist for the entire album).
+        genre (str): The genre of the song.
+        album_art_path (str, optional): The path to the album art image file (e.g., JPG, PNG).
+                                        Defaults to None.
+    """
     try:
-        mp3.add_tags()
-    except:
-        pass
+        # Load the MP3 file
+        audio = MP3(file_path, ID3=ID3)
 
-    mp3.tags.add(
-        APIC(
-            # encoding = 3,
-            mime = "image/jpeg",
-            type = 3,
-            desc = u'Cover',
-            data = urlopen("file://%s" % album_art_file).read()
-        )
-    )
-    mp3.save()
+        # Add ID3 tag if not present
+        try:
+            audio.delete()
+            audio.add_tags()
+        except:
+            audio.add_tags()
+
+        # Set the metadata fields
+        audio.tags.add(TIT2(encoding=3, text=[title]))          # Title
+        audio.tags.add(TPE1(encoding=3, text=[artist]))         # Artist (performer of the track)
+        audio.tags.add(TALB(encoding=3, text=[album]))          # Album
+        audio.tags.add(TPE2(encoding=3, text=[album_artist]))   # Album Artist (main artist for the album)
+        audio.tags.add(TCON(encoding=3, text=[genre]))          # Genre
+
+        # Add album art if a path is provided
+        if album_art_path and os.path.exists(album_art_path):
+            try:
+                # Determine the MIME type of the image
+                mime_type = "image/jpeg" if album_art_path.lower().endswith((".jpg", ".jpeg")) else "image/png"
+                with open(album_art_path, 'rb') as album_art_file:
+                    audio.tags.add(
+                        APIC(
+                            encoding=3,         # UTF-8
+                            mime=mime_type,     # image/jpeg or image/png
+                            type=3,             # 3 is for Front Cover
+                            desc=u'Cover',
+                            data=album_art_file.read()
+                        )
+                    )
+                print(f"Album art '{album_art_path}' added successfully.")
+            except Exception as e:
+                print(f"Error adding album art: {e}")
+        elif album_art_path:
+            print(f"Warning: Album art file not found at '{album_art_path}'. Skipping album art.")
+
+        # Save the changes to the MP3 file
+        audio.save()
+        print(f"Metadata successfully added to '{file_path}'.")
+
+    except FileNotFoundError:
+        print(f"Error: MP3 file not found at '{file_path}'.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
 
 
 def remove_metadata(target_f):

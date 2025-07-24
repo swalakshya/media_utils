@@ -63,6 +63,21 @@ def mono_stereo(input_file, output_file=None):
 def trim_media_func(input_file, start_time=None, end_time=None):
     media.trim_media(input_file, start_time, end_time)
 
+def video_to_audio_func(
+        input_file, output_file,
+        album, artist, album_artist, album_art_file,
+        title, genre
+):
+    if not output_file:
+        output_file = input_file.replace(".mp4", ".mp3")
+        media.video_to_audio(input_file, output_file, replace=True)
+
+    if album is not None and artist is not None and title is not None:
+        media.add_mp3_metadata(
+            output_file, title, artist, album, album_artist,
+            genre, album_art_file
+        )
+
 
 def main(parser_args):
     if parser_args.command == "sbv_to_txt":
@@ -105,6 +120,13 @@ def main(parser_args):
         trim_media_func(
             parser_args.input_file, parser_args.start_time,
             parser_args.end_time
+        )
+    elif parser_args.command == "video_to_audio":
+        video_to_audio_func(
+            parser_args.input_file, parser_args.output_file,
+            parser_args.album, parser_args.artist,
+            parser_args.album_artist, parser_args.album_art_file,
+            parser_args.title, parser_args.genre
         )
 
 if __name__ == '__main__':
@@ -269,6 +291,43 @@ if __name__ == '__main__':
     trim_media_parser.add_argument(
         "--end-time", "-e", type=str,
         help="End time. If none, video is not at end"
+    )
+
+    video_to_audio_parser = sub_parsers.add_parser(
+        "video_to_audio",
+        help="Extract audio from a video file"
+    )
+    video_to_audio_parser.add_argument(
+        "--input_file", "-i", type=str,
+        help="Input video file"
+    )
+    video_to_audio_parser.add_argument(
+        "--output_file", "-o", type=str,
+        help="Output audio file. If not provided, will replace the input file with .mp3 extension"
+    )
+    video_to_audio_parser.add_argument(
+        "--album", type=str, default=None,
+        help="Album Name"
+    )
+    video_to_audio_parser.add_argument(
+        "--artist", type=str, default=None,
+        help="Artist Name"
+    )
+    video_to_audio_parser.add_argument(
+        "--title", type=str, default=None,
+        help="Title of the audio file"
+    )
+    video_to_audio_parser.add_argument(
+        "--album_artist", type=str, default=None,
+        help="Album Artist Name"
+    )
+    video_to_audio_parser.add_argument(
+        "--album_art_file", type=str, default=None,
+        help="Album Art File (image file) to be embedded in the audio file"
+    )
+    video_to_audio_parser.add_argument(
+        "--genre", type=str, default=None,
+        help="Genre of the audio file"
     )
 
     args = parser.parse_args()
