@@ -1,0 +1,312 @@
+.pdf-ocr-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.pdf-ocr-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+}
+
+.pdf-ocr-card h2 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 24px;
+}
+
+.description {
+    color: #666;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+.pdf-ocr-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-group input[type="file"],
+.form-group input[type="number"],
+.form-group select {
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
+
+.form-group input[type="file"]:focus,
+.form-group input[type="number"]:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.form-group input:disabled,
+.form-group select:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.file-info {
+    padding: 8px 12px;
+    background-color: #e8f5e9;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #2e7d32;
+}
+
+.page-range-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.page-range-inputs input {
+    flex: 1;
+}
+
+.page-range-inputs span {
+    color: #666;
+    font-weight: 500;
+}
+
+.form-group small {
+    color: #999;
+    font-size: 12px;
+}
+
+.message {
+    padding: 12px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.error-message {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+.success-message {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #81c784;
+}
+
+.button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    flex: 1;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #45a049;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-secondary {
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #e0e0e0;
+}
+
+.processing-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
+
+.processing-info p {
+    margin: 0;
+    color: #666;
+    text-align: center;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #4CAF50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Progress Display */
+.progress-container {
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.progress-step {
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.progress-percentage {
+    font-weight: 700;
+    color: #4CAF50;
+    font-size: 18px;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 24px;
+    background-color: #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50 0%, #66BB6A 100%);
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 8px;
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.progress-pages {
+    text-align: center;
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.progress-message {
+    text-align: center;
+    color: #555;
+    font-size: 14px;
+    font-style: italic;
+    margin-top: 8px;
+}
+
+/* Warnings Section */
+.warnings-section {
+    margin-top: 16px;
+    border-top: 1px solid #e0e0e0;
+    padding-top: 12px;
+}
+
+.warnings-section summary {
+    cursor: pointer;
+    color: #ff9800;
+    font-weight: 600;
+    font-size: 13px;
+    user-select: none;
+    padding: 8px;
+    background-color: #fff3e0;
+    border-radius: 4px;
+    list-style-position: inside;
+}
+
+.warnings-section summary:hover {
+    background-color: #ffe0b2;
+}
+
+.warnings-list {
+    margin: 12px 0 0 0;
+    padding-left: 24px;
+    list-style: disc;
+}
+
+.warnings-list li {
+    color: #e65100;
+    font-size: 12px;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .pdf-ocr-container {
+        padding: 10px;
+        margin: 20px auto;
+    }
+
+    .pdf-ocr-card {
+        padding: 20px;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .page-range-inputs {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-range-inputs span {
+        text-align: center;
+    }
+}
