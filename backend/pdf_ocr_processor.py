@@ -121,7 +121,7 @@ def process_pdf_ocr(
 
     print(f"[Job {job_id}] Running command: {' '.join(cmd)}\n")
 
-    # Map step names to step numbers
+    # Map step names to step numbers (technical names from OCRmyPDF)
     step_map = {
         "Scanning contents": 1,
         "OCR": 2,
@@ -130,6 +130,17 @@ def process_pdf_ocr(
         "Recompressing JPEGs": 5,
         "Deflating JPEGs": 6,
         "JBIG2": 7,
+    }
+
+    # Map technical names to user-friendly display names
+    display_name_map = {
+        "Scanning contents": "Reading your PDF",
+        "OCR": "Recognizing text",
+        "PDF/A conversion": "Creating searchable PDF",
+        "Linearizing": "Optimizing file",
+        "Recompressing JPEGs": "Compressing images",
+        "Deflating JPEGs": "Optimizing images",
+        "JBIG2": "Finalizing document",
     }
 
     current_step_name = None
@@ -238,11 +249,14 @@ def process_pdf_ocr(
 
                                 step_num = step_map.get(step_name, 0)
 
-                                # Always call the callback for every update
-                                if progress_callback:
-                                    progress_callback(step_num, step_name, current, total, percentage)
+                                # Get user-friendly display name
+                                display_name = display_name_map.get(step_name, step_name)
 
-                                # Print on step change or every 5% (for logging)
+                                # Always call the callback for every update (with friendly name)
+                                if progress_callback:
+                                    progress_callback(step_num, display_name, current, total, percentage)
+
+                                # Print on step change or every 3% (for logging - use technical name)
                                 if step_name != current_step_name or percentage % 3 == 0:
                                     print(f"[Job {job_id}] STEP {step_num}/7: {step_name} - {current}/{total} pages ({percentage}%)")
                                     current_step_name = step_name
