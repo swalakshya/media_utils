@@ -78,6 +78,80 @@ def video_to_audio_func(
             genre, album_art_file
         )
 
+def upload_videos_func(
+        folder, playlist_name, credentials_file, language
+):
+    youtube_utils.upload_videos_to_playlist(
+        folder, playlist_name, credentials_file, language
+    )
+
+def ocr_pdf_func(file_name, start_page, end_page, language):
+    """
+    OCR a PDF file to create a searchable PDF using Tesseract.
+
+    Args:
+        file_name: Path to input PDF file
+        start_page: Starting page number (1-indexed, optional)
+        end_page: Ending page number (1-indexed, inclusive, optional)
+        language: OCR language code (default: 'hin' for Hindi)
+    """
+    import tempfile
+    from pypdf import PdfReader, PdfWriter
+    from pdf_utils.tesseract_ocr import TesseractOCR
+
+    # Validate input file
+    if not os.path.exists(file_name):
+        print("Error: File not found: %s" % file_name)
+        return
+
+    # Generate output filename
+    base_name = os.path.splitext(file_name)[0]
+    output_file = "%s_searchable.pdf" % base_name
+
+    # Initialize Tesseract OCR
+    ocr = TesseractOCR(language=language)
+
+    # Case 1: Process specific page range
+    if start_page is not None and end_page is not None:
+        print("Processing pages %d to %d..." % (start_page, end_page))
+
+        # Extract specified pages
+        reader = PdfReader(file_name)
+        total_pages = len(reader.pages)
+
+        # Validate page range
+        if start_page < 1 or end_page > total_pages or start_page > end_page:
+            print("Error: Invalid page range. PDF has %d pages." % total_pages)
+            return
+
+        # Create temporary PDF with extracted pages
+        writer = PdfWriter()
+        for page_num in range(start_page - 1, end_page):  # Convert to 0-indexed
+            writer.add_page(reader.pages[page_num])
+
+        # Save to temporary file
+        temp_pdf = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+        temp_pdf_path = temp_pdf.name
+        with open(temp_pdf_path, 'wb') as f:
+            writer.write(f)
+
+        # Run OCR on temporary PDF
+        result = ocr.process_to_searchable_pdf(temp_pdf_path, output_file)
+
+        # Clean up temporary file
+        os.remove(temp_pdf_path)
+
+    # Case 2: Process entire PDF
+    else:
+        print("Processing entire PDF...")
+        result = ocr.process_to_searchable_pdf(file_name, output_file)
+
+    # Print result
+    if result.success:
+        print("\n✓ Success! Searchable PDF created: %s" % output_file)
+    else:
+        print("\n✗ OCR failed: %s" % result.text_content)
+
 
 def main(parser_args):
     if parser_args.command == "sbv_to_txt":
@@ -129,6 +203,18 @@ def main(parser_args):
             parser_args.title, parser_args.genre
         )
 
+    elif parser_args.command == "upload_videos":
+        upload_videos_func(
+            parser_args.folder, parser_args.playlist,
+            parser_args.credentials, parser_args.language
+        )
+
+    elif parser_args.command == "ocr_pdf":
+        ocr_pdf_func(
+            parser_args.file_name, parser_args.start_page,
+            parser_args.end_page, parser_args.language
+        )
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Media Utilities")
 
@@ -164,7 +250,7 @@ if __name__ == '__main__':
     )
     subtitles.add_argument(
         "--format", "-f", default="srt",
-        help="Format of subtitles (srt/vtt)"
+        help="Format of subtitles (srt/txt)"
     )
     subtitles.add_argument(
         "--auto", "-a", action='store_true',
@@ -328,6 +414,48 @@ if __name__ == '__main__':
     video_to_audio_parser.add_argument(
         "--genre", type=str, default=None,
         help="Genre of the audio file"
+    )
+
+    upload_videos_parser = sub_parsers.add_parser(
+        "upload_videos",
+        help="Upload videos from a folder to YouTube playlist"
+    )
+    upload_videos_parser.add_argument(
+        "--folder", "-f", type=str, required=True,
+        help="Folder containing video files to upload"
+    )
+    upload_videos_parser.add_argument(
+        "--playlist", "-p", type=str, required=True,
+        help="Name of the YouTube playlist (will be created if doesn't exist)"
+    )
+    upload_videos_parser.add_argument(
+        "--credentials", "-c", type=str, required=True,
+        help="Path to OAuth 2.0 credentials JSON file (client_secrets.json)"
+    )
+    upload_videos_parser.add_argument(
+        "--language", "-l", type=str, default="hi",
+        help="Video language code (hi=Hindi, gu=Gujarati, en=English, etc.)"
+    )
+
+    ocr_pdf_parser = sub_parsers.add_parser(
+        "ocr_pdf",
+        help="OCR a PDF file to create a searchable PDF using Tesseract"
+    )
+    ocr_pdf_parser.add_argument(
+        "--file_name", "-f", type=str, required=True,
+        help="Input PDF file to process"
+    )
+    ocr_pdf_parser.add_argument(
+        "--start_page", "-s", type=int, default=None,
+        help="Starting page number (1-indexed, optional)"
+    )
+    ocr_pdf_parser.add_argument(
+        "--end_page", "-e", type=int, default=None,
+        help="Ending page number (1-indexed, inclusive, optional)"
+    )
+    ocr_pdf_parser.add_argument(
+        "--language", "-l", type=str, default="hin",
+        help="OCR language code (hin=Hindi, guj=Gujarati, eng=English, etc.)"
     )
 
     args = parser.parse_args()

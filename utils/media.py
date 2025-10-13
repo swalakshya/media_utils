@@ -372,6 +372,47 @@ def vtt_to_ass(vtt_file, ass_file, font_name="Eczar", font_size=24,
     except Exception as e:
         print(f"An error occurred: {e}")
 
+def srt_to_txt(input_file, output_file=None):
+    """
+    Converts an SRT subtitle file to plain text using pysubs2 library.
+    This properly handles SRT format and avoids duplicates.
+
+    Args:
+        input_file (str): Path to the input SRT file
+        output_file (str, optional): Path to the output TXT file.
+                                     If None, replaces .srt with .txt
+    """
+    if output_file is None:
+        output_file = input_file.replace('.srt', '.txt')
+
+    print("Converting SRT file %s to text file %s" % (input_file, output_file))
+
+    try:
+        # Load the SRT file using pysubs2
+        subs = pysubs2.load(input_file)
+
+        # Extract text from all subtitle events
+        text_lines = []
+        for line in subs:
+            # Get the text and remove any formatting tags
+            text = line.text.strip()
+            if text:  # Only add non-empty lines
+                text_lines.append(text)
+
+        # Join all text with spaces
+        output_text = ' '.join(text_lines)
+
+        # Write to output file
+        with open(output_file, 'w', encoding='utf-8') as fh:
+            fh.write(output_text)
+
+        print("Successfully converted to %s" % output_file)
+        return True
+
+    except Exception as e:
+        print("Error converting SRT to TXT: %s" % str(e))
+        return False
+
 def convert_mono_audio_to_stereo(input_file, output_file=None):
     replace = False
     if output_file is None:

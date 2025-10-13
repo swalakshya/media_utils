@@ -10,3 +10,19 @@ google-cloud-storage
 webvtt-py
 pysubs2
 openai-whisper
+google-auth-oauthlib
+google-auth-httplib2
+
+# pdf_utils
+# For Tesseract/OCRmyPDF (to generate the final searchable PDF)
+ocrmypdf
+
+# For Google Vision API
+google-cloud-vision
+
+# For converting PDF pages to images (used by Vision API implementation)
+pdf2image
+Pillow
+
+# For PDF manipulation (extracting pages)
+pypdf
