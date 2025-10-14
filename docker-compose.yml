@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   media-utils:
+    image: swalakshya/media-utils:latest
     build:
       context: .
       dockerfile: Dockerfile
