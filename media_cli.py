@@ -12,12 +12,13 @@ def sbv_to_txt(input_file, output_file):
     media.sbv_to_txt(input_file, output_file)
 
 
-def download_subtitles(yt_id, output_folder, subs_format, lang, is_auto):
+def download_subtitles(yt_id, output_folder, subs_format, lang, is_auto, api_key):
     youtube_utils.download_subtitles(
         yt_id, output_folder,
         sub_format=subs_format,
         lang=lang,
-        auto_gen=is_auto)
+        auto_gen=is_auto,
+        api_key=api_key)
 
 
 def transcode_video(
@@ -160,7 +161,7 @@ def main(parser_args):
     elif parser_args.command == "subtitles":
         download_subtitles(
             parser_args.id, parser_args.output_folder, parser_args.format,
-            parser_args.lang, parser_args.auto)
+            parser_args.lang, parser_args.auto, parser_args.api_key)
 
     elif parser_args.command == "transcode":
         transcode_video(
@@ -255,6 +256,10 @@ if __name__ == '__main__':
     subtitles.add_argument(
         "--auto", "-a", action='store_true',
         help="Download auto generated titles (default false)"
+    )
+    subtitles.add_argument(
+        "--api_key", "-k", type=str, default=None,
+        help="YouTube Data API v3 key (optional, improves filename quality by fetching video titles)"
     )
 
     transcode_vid = sub_parsers.add_parser(

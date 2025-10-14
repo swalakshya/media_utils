@@ -18,7 +18,7 @@ from youtube_dl import YoutubeDL
 TMP_DIR = "%s/tmp" % (os.getenv("HOME"))
 
 
-def download_transcript_for_video(video_id, output_folder, lang="hi", output_format="txt"):
+def download_transcript_for_video(video_id, output_folder, lang="hi", output_format="txt", api_key=None):
     """
     Download transcript for a single video using YouTube Transcript API.
     This avoids VTT conversion issues and provides clean text.
@@ -28,17 +28,34 @@ def download_transcript_for_video(video_id, output_folder, lang="hi", output_for
         output_folder: Folder to save the transcript
         lang: Language code (e.g., 'hi', 'gu', 'en')
         output_format: 'txt' or 'srt'
+        api_key: YouTube Data API v3 key (optional, uses video_id as title if not provided)
 
     Returns:
         True if successful, False otherwise
     """
     try:
-        # Get video info to create filename
-        from yt_dlp import YoutubeDL
-        ydl_opts = {'quiet': True, 'no_warnings': True}
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_id, download=False)
-            video_title = info.get('title', video_id)
+        # Get video title using YouTube Data API v3
+        video_title = video_id  # Default fallback
+
+        if api_key:
+            try:
+                youtube = googleapiclient.discovery.build(
+                    'youtube', 'v3', developerKey=api_key)
+
+                request = youtube.videos().list(
+                    part='snippet',
+                    id=video_id
+                )
+                response = request.execute()
+
+                if response.get('items'):
+                    video_title = response['items'][0]['snippet']['title']
+                else:
+                    print("Warning: Could not find video metadata for %s, using video ID as title" % video_id)
+            except Exception as e:
+                print("Warning: Could not fetch video title via API: %s, using video ID as title" % str(e))
+        else:
+            print("Note: No API key provided, using video ID as filename")
 
         # Sanitize filename
         safe_title = "".join(c for c in video_title if c.isalnum() or c in (' ', '-', '_')).strip()
@@ -90,7 +107,7 @@ def format_timestamp(seconds):
     return "%02d:%02d:%02d,%03d" % (hours, minutes, secs, millis)
 
 def download_subtitles(yt_id, output_folder, sub_format="srt",
-                       auto_gen=True, lang="hi"):
+                       auto_gen=True, lang="hi", api_key=None):
     """
     Download subtitles for YouTube video(s) or playlist.
     Uses YouTube Transcript API for clean transcripts without VTT conversion issues.
@@ -101,6 +118,7 @@ def download_subtitles(yt_id, output_folder, sub_format="srt",
         sub_format: 'srt' or 'txt'
         auto_gen: Not used anymore (kept for compatibility)
         lang: Language code (e.g., 'hi', 'gu', 'en')
+        api_key: YouTube Data API v3 key (optional, for better filenames)
     """
     print("Downloading subtitles for ID %s, format %s, lang %s in folder %s" % (
         yt_id, sub_format, lang, output_folder
@@ -144,7 +162,7 @@ def download_subtitles(yt_id, output_folder, sub_format="srt",
         success_count = 0
         for i, video_id in enumerate(video_ids, 1):
             print("\n[%d/%d] Processing video: %s" % (i, len(video_ids), video_id))
-            if download_transcript_for_video(video_id, output_folder, lang, sub_format):
+            if download_transcript_for_video(video_id, output_folder, lang, sub_format, api_key):
                 success_count += 1
 
         print("\n" + "="*50)
