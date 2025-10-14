@@ -97,6 +97,39 @@ Convert your scanned PDFs into searchable PDFs using OCR (Optical Character Reco
 2. Click the 🗑️ **Delete** button (trash icon) next to the container
 3. Confirm deletion
 
+## 🔄 Updating to the Latest Version
+
+When a new version is available:
+
+### Step 1: Stop the Running Container
+
+1. Open Docker Desktop
+2. Go to "Containers" tab
+3. Find `media-utils` and click the ⏹️ **Stop** button
+
+### Step 2: Remove the Old Container
+
+1. Click the 🗑️ **Delete** button next to the stopped container
+2. Confirm deletion
+
+### Step 3: Pull the Latest Image
+
+1. Go to "Images" tab in Docker Desktop (left sidebar)
+2. Find `swalakshya/media-utils:latest` in the list
+3. Click the ⋮ (three dots) menu next to it
+4. Select **Pull** to download the latest version
+5. Wait for the download to complete (you'll see "Pull complete")
+
+### Step 4: Run the Updated Version
+
+1. Click the ▶️ **Run** button next to the updated image
+2. Click on "Optional Settings" to expand
+3. Set Host Port to `8000`
+4. Click the blue **Run** button
+5. Wait 30 seconds, then access at `localhost:8000`
+
+**That's it!** You're now running the latest version with all new features and fixes.
+
 ## ❓ Troubleshooting
 
 ### Problem: "Can't access localhost:8000"
