@@ -31,6 +31,13 @@ class ProgressUpdate:
     message: Optional[str] = None
     timestamp: datetime = field(default_factory=datetime.now)
 
+    # ETA fields
+    elapsed_seconds: Optional[float] = None
+    eta_seconds: Optional[float] = None
+    pages_per_second: Optional[float] = None
+    step_eta_seconds: Optional[float] = None
+    estimated_completion_time: Optional[str] = None  # ISO format
+
 
 @dataclass
 class Job:

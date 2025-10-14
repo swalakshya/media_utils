@@ -8,8 +8,150 @@ import sys
 import pty
 import os
 import select
+import time
 from typing import Optional, Callable
 from pathlib import Path
+from datetime import datetime
+
+
+class ETACalculator:
+    """
+    Calculate estimated time to completion based on actual progress.
+    Uses sliding window for recent speed and blends with overall speed.
+    """
+
+    def __init__(self, total_pages: int):
+        self.total_pages = total_pages
+        self.job_start_time = time.time()
+        self.step_start_time = time.time()
+        self.current_step = 0
+        self.step_start_page = 0
+
+        # Historical data for better estimates
+        self.page_times = []  # List of (page_num, timestamp) tuples
+        self.step_speeds = {}  # {step_num: pages_per_second}
+        self.last_eta = None
+
+        # Empirical step weights (based on observed 236-page PDF processing)
+        self.step_weights = {
+            1: 0.02,  # Reading: 2%
+            2: 0.60,  # OCR: 60% (slowest)
+            3: 0.10,  # Creating PDF: 10%
+            4: 0.05,  # Optimizing: 5%
+            5: 0.15,  # Compressing: 15%
+            6: 0.08,  # Optimizing images: 8%
+            7: 0.02   # Finalizing: 2%
+        }
+
+    def update(self, step_num: int, current_page: int, total_pages: int) -> dict:
+        """
+        Calculate ETA based on actual progress.
+        Returns dict with eta_seconds, elapsed_seconds, pages_per_second, etc.
+        """
+        now = time.time()
+        elapsed = now - self.job_start_time
+
+        # Track step changes
+        if step_num != self.current_step:
+            if self.current_step > 0:
+                # Record speed for completed step
+                step_elapsed = now - self.step_start_time
+                pages_in_step = current_page - self.step_start_page
+                if pages_in_step > 0 and step_elapsed > 0:
+                    self.step_speeds[self.current_step] = pages_in_step / step_elapsed
+
+            self.current_step = step_num
+            self.step_start_time = now
+            self.step_start_page = current_page
+
+        # Add current page timing first
+        self.page_times.append((current_page, now))
+
+        # Keep only last 50 page timings (sliding window)
+        if len(self.page_times) > 50:
+            self.page_times = self.page_times[-50:]
+
+        # Don't calculate ETA until we have at least 10% progress AND minimum elapsed time
+        # This prevents wildly inaccurate estimates at the start
+        progress_percentage = (current_page / total_pages * 100) if total_pages > 0 else 0
+        min_elapsed_time = 5  # Wait at least 5 seconds before showing ETA
+
+        if progress_percentage < 10 or elapsed < min_elapsed_time or len(self.page_times) < 5:
+            # Not enough data yet, return None for ETA fields
+            return {
+                'elapsed_seconds': round(elapsed, 1),
+                'eta_seconds': None,
+                'pages_per_second': None,
+                'step_eta_seconds': None,
+                'estimated_completion_time': None
+            }
+
+        # Calculate current speed (weighted recent + overall)
+        # Use last 20 pages for recent speed
+        recent_pages = self.page_times[-20:]
+        if len(recent_pages) >= 2:
+            recent_elapsed = recent_pages[-1][1] - recent_pages[0][1]
+            # Protect against very small time intervals (< 0.5 seconds)
+            if recent_elapsed < 0.5:
+                recent_speed = 0
+            else:
+                recent_speed = len(recent_pages) / recent_elapsed
+        else:
+            recent_speed = current_page / elapsed if elapsed > 0 else 0
+
+        # Overall speed
+        overall_speed = current_page / elapsed if elapsed > 0 else 0
+
+        # Weighted average: 70% recent, 30% overall (favor recent speed)
+        pages_per_second = 0.7 * recent_speed + 0.3 * overall_speed
+
+        # Sanity check: speed should be reasonable (< 10 pages/sec for OCR)
+        if pages_per_second > 10:
+            pages_per_second = overall_speed  # Fall back to overall speed if recent seems wrong
+
+        # Calculate ETA for current step
+        remaining_pages_in_step = total_pages - current_page
+        if pages_per_second > 0:
+            step_eta = remaining_pages_in_step / pages_per_second
+        else:
+            step_eta = None
+
+        # Estimate remaining steps (using historical data if available)
+        remaining_steps_time = 0
+        for future_step in range(step_num + 1, 8):  # Steps 1-7
+            if future_step in self.step_speeds:
+                # Use historical speed from completed steps
+                remaining_steps_time += total_pages / self.step_speeds[future_step]
+            else:
+                # Use fallback estimates based on step weights
+                if pages_per_second > 0:
+                    # Estimate total time based on current speed, then scale by weight
+                    estimated_total_time = total_pages / pages_per_second
+                    remaining_steps_time += estimated_total_time * self.step_weights.get(future_step, 0.1)
+
+        # Total ETA
+        eta_seconds = (step_eta if step_eta else 0) + remaining_steps_time
+
+        # Cap maximum ETA growth to prevent sudden jumps (max 20% increase)
+        if self.last_eta and eta_seconds > self.last_eta * 1.2:
+            eta_seconds = self.last_eta * 1.2
+
+        # Ensure minimum ETA when progress > 0
+        if eta_seconds < 1 and current_page > 0 and current_page < total_pages:
+            eta_seconds = 1
+
+        self.last_eta = eta_seconds
+
+        # Estimated completion time
+        completion_time = datetime.fromtimestamp(now + eta_seconds)
+
+        return {
+            'elapsed_seconds': round(elapsed, 1),
+            'eta_seconds': round(eta_seconds, 1),
+            'pages_per_second': round(pages_per_second, 3),
+            'step_eta_seconds': round(step_eta, 1) if step_eta else None,
+            'estimated_completion_time': completion_time.isoformat() + 'Z'
+        }
 
 
 def get_available_cores():
@@ -127,6 +269,7 @@ def process_pdf_ocr(
         progress_pattern = re.compile(r'^([A-Z][A-Za-z /]+?)\s+[━╸\s]*?\s*(\d+)%\s+(\d+)/(\d+)')
 
         output_buffer = ""
+        eta_calculator = None  # Initialize on first progress update
 
         while True:
             # Check if process is still running
@@ -209,13 +352,20 @@ def process_pdf_ocr(
                                 # Get user-friendly display name
                                 display_name = display_name_map.get(step_name, step_name)
 
-                                # Always call the callback for every update (with friendly name)
+                                # Initialize ETA calculator on first progress update
+                                if eta_calculator is None:
+                                    eta_calculator = ETACalculator(total)
+
+                                # Calculate ETA
+                                eta_data = eta_calculator.update(step_num, current, total)
+
+                                # Always call the callback for every update (with friendly name and ETA data)
                                 if progress_callback:
-                                    progress_callback(step_num, display_name, current, total, percentage)
+                                    progress_callback(step_num, display_name, current, total, percentage, eta_data)
 
                                 # Print on step change or every 3% (for logging - use technical name)
                                 if step_name != current_step_name or percentage % 3 == 0:
-                                    print(f"[Job {job_id}] STEP {step_num}/7: {step_name} - {current}/{total} pages ({percentage}%)")
+                                    print(f"[Job {job_id}] STEP {step_num}/7: {step_name} - {current}/{total} pages ({percentage}%) | ETA: {eta_data['eta_seconds']}s | Speed: {eta_data['pages_per_second']} p/s")
                                     current_step_name = step_name
 
                             # Print errors/warnings

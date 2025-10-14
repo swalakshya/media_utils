@@ -76,7 +76,7 @@ async def process_pdf_with_progress(
     print(f"[Job {job_id}] Starting OCR processing")
 
     # Define progress callback to send updates to job_manager
-    def progress_callback(step_num, step_name, current, total, percentage):
+    def progress_callback(step_num, step_name, current, total, percentage, eta_data=None):
         """Called by process_pdf_ocr with progress updates"""
         # Special handling for process_started signal (step_num = -1)
         if step_num == -1 and step_name == "process_started":
@@ -84,7 +84,8 @@ async def process_pdf_with_progress(
             job_manager.set_process_pid(job_id, current)
             return
 
-        job_manager.add_progress(job_id, ProgressUpdate(
+        # Create progress update with ETA data if available
+        update = ProgressUpdate(
             type="progress",
             step_number=step_num,
             total_steps=7,
@@ -93,7 +94,17 @@ async def process_pdf_with_progress(
             total=total,
             percentage=percentage,
             message=f"{step_name}: {current}/{total} pages ({percentage}%)"
-        ))
+        )
+
+        # Add ETA fields if provided
+        if eta_data:
+            update.elapsed_seconds = eta_data.get('elapsed_seconds')
+            update.eta_seconds = eta_data.get('eta_seconds')
+            update.pages_per_second = eta_data.get('pages_per_second')
+            update.step_eta_seconds = eta_data.get('step_eta_seconds')
+            update.estimated_completion_time = eta_data.get('estimated_completion_time')
+
+        job_manager.add_progress(job_id, update)
 
     # Define cancellation check callback
     def cancellation_check():
@@ -231,6 +242,12 @@ async def stream_ocr_progress(job_id: str):
                         "total": update.total,
                         "percentage": update.percentage,
                         "message": update.message,
+                        # ETA fields
+                        "elapsed_seconds": update.elapsed_seconds,
+                        "eta_seconds": update.eta_seconds,
+                        "pages_per_second": update.pages_per_second,
+                        "step_eta_seconds": update.step_eta_seconds,
+                        "estimated_completion_time": update.estimated_completion_time,
                     }
                     yield f"data: {json.dumps(event_data)}\n\n"
 
@@ -257,6 +274,12 @@ async def stream_ocr_progress(job_id: str):
                         "total": update.total,
                         "percentage": update.percentage,
                         "message": update.message,
+                        # ETA fields
+                        "elapsed_seconds": update.elapsed_seconds,
+                        "eta_seconds": update.eta_seconds,
+                        "pages_per_second": update.pages_per_second,
+                        "step_eta_seconds": update.step_eta_seconds,
+                        "estimated_completion_time": update.estimated_completion_time,
                     }
                     yield f"data: {json.dumps(event_data)}\n\n"
 

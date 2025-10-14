@@ -2,6 +2,38 @@ import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import './PdfOcr.css';
 
+// Helper function to format seconds into readable time
+const formatTime = (seconds) => {
+    if (!seconds || seconds < 0) return '--';
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+
+    if (hours > 0) {
+        return `${hours}h ${minutes}m ${secs}s`;
+    } else if (minutes > 0) {
+        return `${minutes}m ${secs}s`;
+    } else {
+        return `${secs}s`;
+    }
+};
+
+// Helper function to format completion time
+const formatCompletionTime = (isoString) => {
+    if (!isoString) return '--';
+
+    try {
+        const date = new Date(isoString);
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = date.getSeconds().toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+    } catch {
+        return '--';
+    }
+};
+
 const PdfOcr = () => {
     const [file, setFile] = useState(null);
     const [language, setLanguage] = useState('hin');
@@ -322,9 +354,33 @@ const PdfOcr = () => {
                                 ></div>
                             </div>
 
+                            {/* Progress details with ETA */}
                             {progress.current && progress.total && (
-                                <div className="progress-pages">
-                                    {progress.current} of {progress.total} pages
+                                <div className="progress-details">
+                                    <div className="progress-info-row">
+                                        <span className="progress-label">Pages:</span>
+                                        <span className="progress-value">
+                                            {progress.current} of {progress.total}
+                                        </span>
+                                    </div>
+
+                                    {progress.elapsed_seconds !== undefined && (
+                                        <div className="progress-info-row">
+                                            <span className="progress-label">Elapsed:</span>
+                                            <span className="progress-value">
+                                                {formatTime(progress.elapsed_seconds)}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {progress.eta_seconds !== undefined && progress.eta_seconds !== null && (
+                                        <div className="progress-info-row">
+                                            <span className="progress-label">Time Remaining:</span>
+                                            <span className="progress-value progress-eta">
+                                                {formatTime(progress.eta_seconds)}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
