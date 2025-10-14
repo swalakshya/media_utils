@@ -18,7 +18,7 @@ from youtube_dl import YoutubeDL
 TMP_DIR = "%s/tmp" % (os.getenv("HOME"))
 
 
-def download_transcript_for_video(video_id, output_folder, lang="hi", output_format="txt"):
+def download_transcript_for_video(video_id, output_folder, lang="hi", output_format="txt", api_key=None, video_title=None):
     """
     Download transcript for a single video using YouTube Transcript API.
     This avoids VTT conversion issues and provides clean text.
@@ -28,17 +28,36 @@ def download_transcript_for_video(video_id, output_folder, lang="hi", output_for
         output_folder: Folder to save the transcript
         lang: Language code (e.g., 'hi', 'gu', 'en')
         output_format: 'txt' or 'srt'
+        api_key: YouTube Data API v3 key (optional, uses video_id as title if not provided)
+        video_title: Pre-fetched video title (optional, avoids API call if provided)
 
     Returns:
         True if successful, False otherwise
     """
     try:
-        # Get video info to create filename
-        from yt_dlp import YoutubeDL
-        ydl_opts = {'quiet': True, 'no_warnings': True}
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_id, download=False)
-            video_title = info.get('title', video_id)
+        # Use pre-fetched title if provided, otherwise fetch it
+        if not video_title:
+            video_title = video_id  # Default fallback
+
+            if api_key:
+                try:
+                    youtube = googleapiclient.discovery.build(
+                        'youtube', 'v3', developerKey=api_key)
+
+                    request = youtube.videos().list(
+                        part='snippet',
+                        id=video_id
+                    )
+                    response = request.execute()
+
+                    if response.get('items'):
+                        video_title = response['items'][0]['snippet']['title']
+                    else:
+                        print("Warning: Could not find video metadata for %s, using video ID as title" % video_id)
+                except Exception as e:
+                    print("Warning: Could not fetch video title via API: %s, using video ID as title" % str(e))
+            else:
+                print("Note: No API key provided, using video ID as filename")
 
         # Sanitize filename
         safe_title = "".join(c for c in video_title if c.isalnum() or c in (' ', '-', '_')).strip()
@@ -90,7 +109,7 @@ def format_timestamp(seconds):
     return "%02d:%02d:%02d,%03d" % (hours, minutes, secs, millis)
 
 def download_subtitles(yt_id, output_folder, sub_format="srt",
-                       auto_gen=True, lang="hi"):
+                       auto_gen=True, lang="hi", api_key=None):
     """
     Download subtitles for YouTube video(s) or playlist.
     Uses YouTube Transcript API for clean transcripts without VTT conversion issues.
@@ -101,6 +120,7 @@ def download_subtitles(yt_id, output_folder, sub_format="srt",
         sub_format: 'srt' or 'txt'
         auto_gen: Not used anymore (kept for compatibility)
         lang: Language code (e.g., 'hi', 'gu', 'en')
+        api_key: YouTube Data API v3 key (optional, for better filenames)
     """
     print("Downloading subtitles for ID %s, format %s, lang %s in folder %s" % (
         yt_id, sub_format, lang, output_folder
@@ -122,8 +142,8 @@ def download_subtitles(yt_id, output_folder, sub_format="srt",
 
     try:
         if is_playlist:
-            # Extract playlist info
-            ydl_opts = {'quiet': True, 'no_warnings': True, 'extract_flat': True}
+            # Extract playlist info with full metadata (includes titles)
+            ydl_opts = {'quiet': True, 'no_warnings': True, 'extract_flat': 'in_playlist'}
             with YoutubeDL(ydl_opts) as ydl:
                 # Make sure we have the full playlist URL
                 playlist_url = yt_id if yt_id.startswith('http') else 'https://www.youtube.com/playlist?list=%s' % yt_id
@@ -131,21 +151,36 @@ def download_subtitles(yt_id, output_folder, sub_format="srt",
 
                 if 'entries' in info:
                     print("Detected playlist with %d videos" % len(info['entries']))
-                    video_ids = [entry['id'] for entry in info['entries'] if entry and 'id' in entry]
+                    # Store both video_id and title
+                    video_ids = []
+                    video_titles = {}
+                    for entry in info['entries']:
+                        if entry and 'id' in entry:
+                            vid_id = entry['id']
+                            video_ids.append(vid_id)
+                            # yt_dlp provides 'title' even with extract_flat
+                            if 'title' in entry and entry['title']:
+                                video_titles[vid_id] = entry['title']
                 else:
                     print("Warning: Could not extract playlist entries")
                     return False
         else:
             # Single video - just extract the video ID
             video_ids = [yt_id]
+            video_titles = {}
             print("Processing single video: %s" % yt_id)
 
         # Download transcript for each video
         success_count = 0
         for i, video_id in enumerate(video_ids, 1):
             print("\n[%d/%d] Processing video: %s" % (i, len(video_ids), video_id))
-            if download_transcript_for_video(video_id, output_folder, lang, sub_format):
+            # Pass title from yt_dlp if available, otherwise use API key or fall back to video_id
+            title = video_titles.get(video_id) if video_titles else None
+            if download_transcript_for_video(video_id, output_folder, lang, sub_format, api_key, video_title=title):
                 success_count += 1
+            # Add delay to avoid hitting YouTube's rate limit
+            if i < len(video_ids):  # Don't delay after the last video
+                time.sleep(5)
 
         print("\n" + "="*50)
         print("Successfully downloaded %d/%d transcripts" % (success_count, len(video_ids)))

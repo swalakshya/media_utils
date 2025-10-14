@@ -26,3 +26,8 @@ Pillow
 
 # For PDF manipulation (extracting pages)
 pypdf
+
+# Backend API
+fastapi
+uvicorn[standard]
+python-multipart
