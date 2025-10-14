@@ -43,20 +43,6 @@ main {
   padding: 20px;
 }
 
-.App-footer {
-  background-color: #333;
-  color: white;
-  text-align: center;
-  padding: 20px;
-  margin-top: auto;
-}
-
-.App-footer p {
-  margin: 0;
-  font-size: 14px;
-  opacity: 0.8;
-}
-
 /* Responsive */
 @media (max-width: 600px) {
   .App-header h1 {

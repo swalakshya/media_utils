@@ -14,53 +14,10 @@ from pathlib import Path
 
 def get_available_cores():
     """
-    Get the number of available CPU cores, respecting Docker container limits.
-    Returns half the available cores to be conservative.
+    Get the number of parallel OCR workers.
+    Default to 2 workers for balanced performance and memory usage.
     """
-    try:
-        # First, try to detect Docker CPU limits from cgroups (cgroup v1 and v2)
-        # Docker limits are in /sys/fs/cgroup/cpu/cpu.cfs_quota_us and cpu.cfs_period_us
-        # or in /sys/fs/cgroup/cpu.max for cgroup v2
-
-        # Try cgroup v2 first (newer)
-        try:
-            with open('/sys/fs/cgroup/cpu.max', 'r') as f:
-                content = f.read().strip()
-                if content != 'max':
-                    quota, period = content.split()
-                    if quota != 'max':
-                        docker_cpus = int(quota) / int(period)
-                        cores = max(1, int(docker_cpus / 2))  # Use half, minimum 1
-                        print(f"[CPU Detection] Docker cgroup v2 limit: {docker_cpus:.1f} cores, using {cores}")
-                        return cores
-        except (FileNotFoundError, ValueError, PermissionError):
-            pass
-
-        # Try cgroup v1
-        try:
-            with open('/sys/fs/cgroup/cpu/cpu.cfs_quota_us', 'r') as f:
-                quota = int(f.read().strip())
-            with open('/sys/fs/cgroup/cpu/cpu.cfs_period_us', 'r') as f:
-                period = int(f.read().strip())
-
-            if quota > 0 and period > 0:
-                docker_cpus = quota / period
-                cores = max(1, int(docker_cpus / 2))  # Use half, minimum 1
-                print(f"[CPU Detection] Docker cgroup v1 limit: {docker_cpus:.1f} cores, using {cores}")
-                return cores
-        except (FileNotFoundError, ValueError, PermissionError):
-            pass
-
-        # Not in Docker or no CPU limit set - use host CPU count
-        import multiprocessing
-        total_cpus = multiprocessing.cpu_count()
-        cores = max(1, total_cpus // 2)  # Use half, minimum 1
-        print(f"[CPU Detection] Host CPUs: {total_cpus}, using {cores}")
-        return cores
-
-    except Exception as e:
-        print(f"[CPU Detection] Error detecting CPUs: {e}, defaulting to 2")
-        return 2  # Safe default
+    return 2
 
 
 def process_pdf_ocr(
@@ -99,7 +56,7 @@ def process_pdf_ocr(
         print(f"[Job {job_id}] Page Range: {start_page}-{end_page}")
     print(f"{'='*60}\n")
 
-    # Detect available CPU cores (Docker-aware)
+    # Get number of parallel workers
     num_jobs = get_available_cores()
 
     # Build OCRmyPDF command with parallel processing

@@ -4,6 +4,7 @@ FastAPI server for YouTube Utils - Media CLI functionalities
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, BackgroundTasks
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import tempfile
 import os
 import shutil
@@ -42,16 +43,18 @@ OUTPUT_DIR = Path(tempfile.gettempdir()) / "media_utils_outputs"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
 
-@app.get("/")
+@app.get("/api")
+@app.get("/api/")
 async def root():
-    """Root endpoint - API health check"""
+    """API health check endpoint"""
     return {
         "status": "ok",
-        "message": "YouTube Utils API is running",
+        "message": "Media Utils API is running",
         "version": "1.0.0",
         "endpoints": {
             "pdf_ocr_async": "/api/pdf/ocr/async",
             "pdf_ocr_stream": "/api/pdf/ocr/stream/{job_id}",
+            "pdf_ocr_cancel": "/api/pdf/ocr/cancel/{job_id}",
             "pdf_download": "/api/pdf/download/{job_id}",
         }
     }
@@ -338,15 +341,27 @@ async def download_pdf(job_id: str):
     """
     job = job_manager.get_job(job_id)
     if not job:
+        print(f"[Download] Job {job_id} not found")
         raise HTTPException(status_code=404, detail="Job not found")
 
+    print(f"[Download] Job {job_id} status: {job.status.value}, output_path: {job.output_path}")
+
     if job.status != JobStatus.COMPLETED:
+        print(f"[Download] Job {job_id} not completed: {job.status.value}")
         raise HTTPException(status_code=400, detail=f"Job is not completed. Status: {job.status.value}")
 
-    if not job.output_path or not os.path.exists(job.output_path):
-        raise HTTPException(status_code=404, detail="Output file not found")
+    if not job.output_path:
+        print(f"[Download] Job {job_id} has no output_path")
+        raise HTTPException(status_code=404, detail="Output file path not set")
+
+    if not os.path.exists(job.output_path):
+        print(f"[Download] Job {job_id} output file does not exist at: {job.output_path}")
+        # List files in OUTPUT_DIR for debugging
+        print(f"[Download] Files in OUTPUT_DIR: {list(OUTPUT_DIR.iterdir())}")
+        raise HTTPException(status_code=404, detail=f"Output file not found at: {job.output_path}")
 
     filename = os.path.basename(job.output_path)
+    print(f"[Download] Sending file: {filename} from {job.output_path}")
     return FileResponse(
         path=job.output_path,
         media_type='application/pdf',
@@ -355,6 +370,13 @@ async def download_pdf(job_id: str):
             "Content-Disposition": f"attachment; filename={filename}"
         }
     )
+
+
+# Mount static files (React frontend) - must be last
+# This serves the built React app at the root path
+frontend_build_dir = Path(__file__).parent.parent / "frontend" / "build"
+if frontend_build_dir.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_build_dir), html=True), name="frontend")
 
 
 @app.on_event("shutdown")
