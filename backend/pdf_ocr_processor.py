@@ -208,7 +208,7 @@ def process_pdf_ocr(
         '--jobs', str(num_jobs),  # Parallel processing for speed
         '--deskew',
         '--force-ocr',
-        '--optimize', '1',
+        '--optimize', '0',  # Disable optimization to avoid corrupted image issues during JPEG recompression
     ]
 
     print(f"[Job {job_id}] Using {num_jobs} parallel workers for OCR processing")

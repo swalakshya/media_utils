@@ -217,8 +217,23 @@ async def stream_ocr_progress(job_id: str):
     """
     Server-Sent Events endpoint for streaming OCR progress updates
     """
-    job = job_manager.get_job(job_id)
+    # Wait briefly for job to be created (handles race condition)
+    max_retries = 3
+    retry_delay = 0.1  # 100ms
+    job = None
+
+    for attempt in range(max_retries):
+        job = job_manager.get_job(job_id)
+        if job:
+            break
+        if attempt < max_retries - 1:
+            print(f"[SSE {job_id}] Job not found yet, retrying... (attempt {attempt + 1}/{max_retries})")
+            await asyncio.sleep(retry_delay)
+
     if not job:
+        # Debug: List all jobs
+        print(f"[SSE {job_id}] Job not found after {max_retries} attempts")
+        print(f"[SSE] Active jobs: {list(job_manager.jobs.keys())}")
         raise HTTPException(status_code=404, detail="Job not found")
 
     async def event_generator():
@@ -419,4 +434,13 @@ async def shutdown_event():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    # Use single worker to ensure in-memory job_manager is shared
+    # reload=True already forces single worker, but we make it explicit
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        workers=1,  # Explicit single worker for in-memory job state
+        log_level="info"
+    )

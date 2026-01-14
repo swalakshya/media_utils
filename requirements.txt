@@ -31,3 +31,6 @@ pypdf
 fastapi
 uvicorn[standard]
 python-multipart
+
+# Video processing
+ffmpeg-python
