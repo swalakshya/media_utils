@@ -35,12 +35,12 @@ Convert your scanned PDFs into searchable PDFs using OCR (Optical Character Reco
 
 2. **Search for Media Utils**
    - At the top of Docker Desktop, you'll see a search bar
-   - Type: `swalakshya/media-utils`
+   - Type: `rajatjain/media-utils`
    - Press Enter or click the search icon
-   - You'll see "swalakshya/media-utils" appear in the results
+   - You'll see "rajatjain/media-utils" appear in the results
 
 3. **Download (Pull) the Image**
-   - Click on `swalakshya/media-utils`
+   - Click on `rajatjain/media-utils`
    - Click the "Pull" button (it looks like a download icon)
    - Wait for it to download (2-3 GB, takes 5-10 minutes depending on your internet)
    - You'll see "Pull complete" when it's done
@@ -115,7 +115,7 @@ When a new version is available:
 ### Step 3: Pull the Latest Image
 
 1. Go to "Images" tab in Docker Desktop (left sidebar)
-2. Find `swalakshya/media-utils:latest` in the list
+2. Find `rajatjain/media-utils:latest` in the list
 3. Click the ⋮ (three dots) menu next to it
 4. Select **Pull** to download the latest version
 5. Wait for the download to complete (you'll see "Pull complete")
