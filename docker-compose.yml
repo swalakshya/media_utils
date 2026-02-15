@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   media-utils:
-    image: rajatjain/media-utils:latest
+    image: jain9rajat/media-utils:latest
     build:
       context: .
       dockerfile: Dockerfile
