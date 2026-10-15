@@ -1,4 +1,3 @@
-youtube_dl
 mutagen
 requests
 sox

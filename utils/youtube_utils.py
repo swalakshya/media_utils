@@ -13,7 +13,6 @@ from youtube_transcript_api._errors import TranscriptsDisabled, NoTranscriptFoun
 from utils import media
 from utils import utils
 
-from youtube_dl import YoutubeDL
 
 TMP_DIR = "%s/tmp" % (os.getenv("HOME"))
 
@@ -194,7 +193,7 @@ def download_subtitles(yt_id, output_folder, sub_format="srt",
         return False
 
 
-def download_video(video_id, target_f, force_encode=False, clean_tmp=True, use_ytlp=True):
+def download_video(video_id, target_f, force_encode=False, clean_tmp=True):
     start = time.time()
     if clean_tmp:
         if os.path.exists(TMP_DIR):
@@ -208,10 +207,7 @@ def download_video(video_id, target_f, force_encode=False, clean_tmp=True, use_y
         'outtmpl': tmp_file,
     }
 
-    if use_ytlp:
-        yt = yt_dlp.YoutubeDL(params)
-    else:
-        yt = YoutubeDL(params)
+    yt = yt_dlp.YoutubeDL(params)
     rc = 0
     try:
         rc = yt.download([video_id])
