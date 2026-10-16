@@ -2,6 +2,7 @@ import os
 import time
 import shutil
 import sys
+import subprocess
 import sox
 import webvtt
 import pysubs2
@@ -236,6 +237,17 @@ def convert_video(input_video, output_video, res,
     return True
 
 def add_subtitles(input_video, subtitles_file, video_final):
+    filters = subprocess.run(
+        ["ffmpeg", "-hide_banner", "-filters"],
+        capture_output=True, text=True, check=True)
+    if not any(len(fields := line.split()) >= 2 and fields[1] == "ass"
+               for line in filters.stdout.splitlines()):
+        print(
+            "FFmpeg is missing the 'ass' subtitle filter (libass support). "
+            "On macOS, run 'brew install ffmpeg-full' and put "
+            "$(brew --prefix ffmpeg-full)/bin at the start of PATH.",
+            file=sys.stderr)
+        sys.exit(1)
     print("Adding subtitles %s to video %s" % (subtitles_file, input_video))
     cmd = [
         "ffmpeg", "-i", input_video, "-vf", "ass=%s" % subtitles_file, video_final]
