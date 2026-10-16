@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import tempfile
 
 import utils.media
 from utils import media
@@ -48,10 +49,24 @@ def vtt_to_ass(input_file, output_file):
     media.vtt_to_ass(input_file, output_file)
 
 def burn_subtitles(input_file, vtt_file, output_file):
-    ass_file = vtt_file.replace(".vtt", ".ass")
-    vtt_to_ass(vtt_file, ass_file)
-    add_subtitles(input_file, ass_file, output_file)
-    os.remove(ass_file)
+    extension = os.path.splitext(vtt_file)[1].lower()
+    if extension not in (".sbv", ".vtt"):
+        raise ValueError("Subtitles must be an SBV or VTT file")
+
+    with tempfile.TemporaryDirectory(prefix="media_subtitles_") as temp_dir:
+        if extension == ".sbv":
+            import webvtt
+
+            print(f"Converting SBV subtitles '{vtt_file}' to VTT, then ASS...")
+            converted_vtt = os.path.join(temp_dir, "subtitles.vtt")
+            webvtt.from_sbv(vtt_file).save(converted_vtt)
+            vtt_file = converted_vtt
+
+        ass_file = os.path.join(temp_dir, "subtitles.ass")
+        vtt_to_ass(vtt_file, ass_file)
+        if not os.path.isfile(ass_file):
+            raise RuntimeError("Subtitle conversion to ASS failed")
+        add_subtitles(input_file, ass_file, output_file)
 
 def audio_to_video(audio, image, video):
     if video is None:
@@ -306,7 +321,7 @@ if __name__ == '__main__':
         help="Input video file")
     brn_subtitles.add_argument(
         "--vtt_file", "-v", type=str,
-        help="Subtitles (vtt) file")
+        help="Subtitles (VTT or SBV) file")
     brn_subtitles.add_argument(
         "--output_file", "-o", type=str,
         help="Output video file"
