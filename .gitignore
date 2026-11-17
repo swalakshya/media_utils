@@ -5,3 +5,4 @@ __pycache__
 scratch
 client_secret.json
 token.pickle
+outputs
